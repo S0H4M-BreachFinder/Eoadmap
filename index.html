@@ -293,8 +293,6 @@
         .job-legend-color { color: var(--job-stroke); }
         .certification-legend-color { color: var(--certification-stroke); }
 
-        /* Removed the overly broad !important dark mode legend override */
-
         .soft-skill-text, .resource-text {
             color: var(--text-secondary-current);
             transition: color var(--transition-speed);
@@ -335,7 +333,7 @@
             transition: transform var(--transition-speed);
         }
         .accordion-item.active .accordion-icon {
-            transform: rotate(45deg); /* Changed from 90 to 45 for a plus to cross look */
+            transform: rotate(45deg);
         }
         .accordion-content {
             max-height: 0;
@@ -345,7 +343,7 @@
             transition: max-height 0.4s ease-out, padding var(--transition-speed);
         }
         .accordion-item.active .accordion-content {
-            max-height: 1000px; /* Adjust if content is larger */
+            max-height: 1000px; 
             padding: 20px;
         }
         .accordion-content ul {
@@ -361,6 +359,7 @@
             transform: translate(-50%, -50%);
             font-size: 1.2em;
             color: var(--text-secondary-current);
+            text-align: center;
         }
 
         #node-info-panel {
@@ -374,18 +373,18 @@
             box-shadow: var(--shadow-current);
             color: var(--text-primary-current);
             max-width: 300px;
-            max-height: 250px; /* Increased height slightly */
+            max-height: 250px;
             overflow-y: auto;
             z-index: 1000;
             transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out, background var(--transition-speed), border var(--transition-speed), box-shadow var(--transition-speed), color var(--transition-speed);
             opacity: 0;
             transform: translateY(20px) scale(0.95);
-            pointer-events: none; /* Initially not interactive */
+            pointer-events: none; 
         }
         #node-info-panel.visible {
             opacity: 1;
             transform: translateY(0) scale(1);
-            pointer-events: auto; /* Interactive when visible */
+            pointer-events: auto; 
         }
         #node-info-panel h4 {
             color: var(--accent-primary-current);
@@ -435,10 +434,10 @@
         <section class="content-section" id="roadmap-visualization">
             <h3>Career Visualization (3D)</h3>
             <div id="visNetwork">
-                <div class="loading-message">Loading 3D Graph... Please wait.</div>
+                <div class="loading-message">Loading 3D Graph Libraries...</div>
             </div>
         </section>
-        <div id="node-info-panel"></div> <!-- Node info panel will be populated by JS -->
+        <div id="node-info-panel"></div>
 
 
         <section class="content-section" id="legend-section">
@@ -688,10 +687,9 @@
                 modeIcon.classList.add('fa-moon');
                 localStorage.setItem('theme', 'light');
             }
-            if (TFG) { // If graph exists, update its colors
+            if (TFG) { 
                 updateGraphColors();
             }
-             // Update info panel style if it exists
             if (nodeInfoPanel) {
                 nodeInfoPanel.style.background = getCssVar('--bg-glass-current');
                 nodeInfoPanel.style.border = `1px solid ${getCssVar('--border-glass-current')}`;
@@ -707,12 +705,11 @@
         if (savedTheme === 'dark') {
             darkModeToggle.checked = true;
         }
-        applyTheme(); // Apply theme on initial load
+        applyTheme(); 
 
         darkModeToggle.addEventListener('change', applyTheme);
 
         function getNodeColor(node) {
-            // Uses CSS variables that are already theme-aware
             switch (node.group) {
                 case 'foundational': return getCssVar('--foundational-fill');
                 case 'basic': return getCssVar('--basic-fill');
@@ -732,7 +729,6 @@
             } else {
                 nodeInfoPanel.classList.remove('visible');
             }
-            // Re-apply styles that might depend on current theme, as panel content changes
             const title = nodeInfoPanel.querySelector('h4');
             if (title) title.style.color = getCssVar('--accent-primary-current');
             const para = nodeInfoPanel.querySelector('p');
@@ -741,26 +737,21 @@
         
         function initGraph() {
             const graphContainer = document.getElementById('visNetwork');
-            if (!graphContainer || !ForceGraph3D || !THREE) {
-                console.error("Graph container or essential libraries (THREE, ForceGraph3D) not found.");
-                if(graphContainer) graphContainer.innerHTML = "<div class='loading-message'>Error initializing 3D graph. Libraries might be missing.</div>";
-                return;
-            }
+            const loadingMessageElement = graphContainer.querySelector('.loading-message');
             
-            const loadingMessage = graphContainer.querySelector('.loading-message');
-            if (loadingMessage) loadingMessage.style.display = 'none';
+            if (loadingMessageElement) loadingMessageElement.style.display = 'none';
 
             TFG = ForceGraph3D({ controlType: 'orbit' })(graphContainer)
                 .graphData({ nodes: allNodesData, links: allLinksData })
                 .backgroundColor('rgba(0,0,0,0)')
-                .nodeRelSize(5) // Base size for spheres
-                .nodeVal(node => { // Affects collision radius & potentially forces
+                .nodeRelSize(5) 
+                .nodeVal(node => { 
                     if (node.group === 'job') return 25;
                     if (node.group === 'certification') return 20;
                     return 12;
                 })
-                .nodeLabel('label') // Fallback label on hover if CSS2D is not used or fails
-                .nodeColor(getNodeColor) // Sets the color of the sphere
+                .nodeLabel('label') 
+                .nodeColor(getNodeColor) 
                 .nodeThreeObjectExtend(true)
                 .nodeThreeObject(node => {
                     const group = new THREE.Group();
@@ -773,22 +764,21 @@
                     const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
                     group.add(sphere);
 
-                    // CSS2DObject for labels
                     const labelDiv = document.createElement('div');
                     labelDiv.className = 'node-label-text';
                     labelDiv.textContent = node.label;
                     labelDiv.style.color = getCssVar('--node-text-current');
                     labelDiv.style.fontSize = '10px';
                     labelDiv.style.fontFamily = getCssVar('--font-primary');
-                    labelDiv.style.textShadow = `0 0 2px ${getCssVar('--bg-current')}`; // Ensure readability
+                    labelDiv.style.textShadow = `0 0 2px ${getCssVar('--bg-current')}`; 
                     if (node.label.length > 18) labelDiv.style.fontSize = '8px';
                     if (node.label.length > 25) labelDiv.style.fontSize = '7px';
                     
                     const label = new THREE.CSS2DObject(labelDiv);
-                    label.position.set(0, TFG.nodeRelSize() * 1.4 + 2, 0); // Position label above the sphere
+                    label.position.set(0, TFG.nodeRelSize() * 1.4 + 2, 0); 
                     group.add(label);
                     
-                    node.__threeObject = group; // Keep a reference
+                    node.__threeObject = group; 
                     return group;
                 })
                 .linkColor(() => getCssVar('--accent-primary-current'))
@@ -819,10 +809,9 @@
                 .onBackgroundClick(() => displayNodeInfo(null))
                 .cooldownTicks(200)
                 .warmupTicks(50)
-                .onEngineStop(() => TFG.zoomToFit(400, 60)); // Zoom to fit with padding
+                .onEngineStop(() => TFG.zoomToFit(400, 60)); 
 
 
-            // Setup CSS2DRenderer for labels
             const css2DRenderer = new THREE.CSS2DRenderer();
             css2DRenderer.setSize(graphContainer.clientWidth, graphContainer.clientHeight);
             css2DRenderer.domElement.style.position = 'absolute';
@@ -860,7 +849,7 @@
                     }
                 }
             });
-            TFG.scene().background = null; // Re-apply transparent background by setting to null
+            TFG.scene().background = null; 
         }
         
 
@@ -870,12 +859,6 @@
             accordions.forEach(accordion => {
                 const header = accordion.querySelector('.accordion-header');
                 header.addEventListener('click', () => {
-                    // Optional: Close other open accordions
-                    // const currentlyActive = document.querySelector('.accordion-item.active');
-                    // if (currentlyActive && currentlyActive !== accordion) {
-                    //     currentlyActive.classList.remove('active');
-                    //     currentlyActive.querySelector('.accordion-content').style.maxHeight = 0;
-                    // }
                     accordion.classList.toggle('active');
                     const content = accordion.querySelector('.accordion-content');
                     if (accordion.classList.contains('active')) {
@@ -886,13 +869,42 @@
                 });
             });
 
-            // Initialize graph
-            // Small delay to ensure DOM is fully ready and styles are applied, can help with initial sizing
-            setTimeout(initGraph, 100); 
+            // Function to check for libraries and initialize graph
+            function attemptInitGraph(retries = 10, delay = 300) { // Increased retries and delay
+                const graphContainer = document.getElementById('visNetwork');
+                const loadingMessageElement = graphContainer.querySelector('.loading-message');
 
-            // Initial theme application happened globally. If graph init is slow,
-            // an explicit color update after init might be good, but applyTheme()
-            // during toggle will handle it. initGraph itself uses current CSS vars.
+                if (typeof ForceGraph3D !== 'undefined' &&
+                    typeof THREE !== 'undefined' &&
+                    typeof THREE.CSS2DRenderer !== 'undefined' && 
+                    typeof d3 !== 'undefined' && typeof d3.forceLink !== 'undefined' // Check d3.forceLink explicitly
+                   ) {
+                    if (loadingMessageElement) loadingMessageElement.textContent = "Initializing 3D Graph...";
+                    console.log("All required libraries loaded. Initializing graph...");
+                    initGraph();
+                } else {
+                    let missing = [];
+                    if (typeof ForceGraph3D === 'undefined') missing.push('ForceGraph3D');
+                    if (typeof THREE === 'undefined') missing.push('THREE.js');
+                    else if (typeof THREE.CSS2DRenderer === 'undefined') missing.push('THREE.CSS2DRenderer');
+                    if (typeof d3 === 'undefined' || typeof d3.forceLink === 'undefined') missing.push('D3 Force');
+                    
+                    console.warn(`Required 3D graph libraries not yet loaded. Missing: ${missing.join(', ')}. Retrying (${retries} left)...`);
+                    if (loadingMessageElement) loadingMessageElement.textContent = `Loading libraries... (${missing.join(', ')} missing). Retrying...`;
+
+                    if (retries > 0) {
+                        setTimeout(() => attemptInitGraph(retries - 1, delay), delay);
+                    } else {
+                        console.error("Failed to load 3D graph libraries after multiple retries.");
+                        if (loadingMessageElement) {
+                            loadingMessageElement.textContent = "Error: Failed to load 3D graph components. Please check your internet connection or browser console for more details, then refresh the page.";
+                            loadingMessageElement.style.color = "red";
+                        }
+                    }
+                }
+            }
+            
+            attemptInitGraph();
         });
 
     </script>
