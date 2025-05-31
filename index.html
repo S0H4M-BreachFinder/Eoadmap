@@ -7,14 +7,10 @@
     <!-- Google Fonts: Poppins for sleek & modern look -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- Load scripts from CDNJS in correct order -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-force-3d/3.0.5/d3-force-3d.min.js"></script> <!-- d3-force for graph physics -->
-    <script src="https://unpkg.com/three-spritetext@1.8.1/dist/three-spritetext.min.js"></script> <!-- For simple text labels if CSS2D is too complex -->
-    <script src="https://unpkg.com/three/examples/js/renderers/CSS2DRenderer.js"></script> <!-- For CSS2D Labels -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/3d-force-graph/1.70.19/3d-force-graph.min.js"></script>
-
-
+    <!-- Load scripts from CDN with defer attribute - Updated to match new example -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/3d-force-graph@1.77.0/dist/3d-force-graph.min.js" defer></script>
+    
     <!-- Font Awesome for icons -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 
@@ -35,388 +31,107 @@
             --accent-primary-light: #007aff;
             --accent-secondary-light: #34c759;
             --shadow-light: 0 8px 32px 0 rgba(31, 38, 135, 0.17);
-            --node-text-light: #000000;
+            --node-text-light: #000000; /* Fallback, new graph script uses its own label colors */
 
             /* --- Dark Mode Colors --- */
             --bg-dark: #121212;
             --bg-glass-dark: rgba(40, 40, 40, 0.6);
             --border-glass-dark: rgba(70, 70, 70, 0.8);
             --text-primary-dark: #FFFFFF;
-            --text-secondary-dark: #bdc1c6; /* Slightly softer white for secondary text */
+            --text-secondary-dark: #bdc1c6;
             --accent-primary-dark: #0a84ff;
             --accent-secondary-dark: #30d158;
             --shadow-dark: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-            --node-text-dark: #FFFFFF;
+            --node-text-dark: #FFFFFF; /* Fallback, new graph script uses its own label colors */
 
-            /* --- Node Colors - Light Theme --- */
-            --foundational-fill-light: #e6ffb3; /* Pale Green */
-            --foundational-stroke-light: #7cb342; /* Green */
-            --basic-fill-light: #d1e9ff; /* Pale Blue */
-            --basic-stroke-light: #42a5f5; /* Blue */
-            --intermediate-fill-light: #fff0b3; /* Pale Yellow */
-            --intermediate-stroke-light: #ffb300; /* Orange-Yellow */
-            --advanced-fill-light: #ffd9b3; /* Pale Orange */
-            --advanced-stroke-light: #fb8c00; /* Orange */
-            --expert-fill-light: #e1bee7; /* Pale Purple */
-            --expert-stroke-light: #8e24aa; /* Purple */
-            --job-fill-light: #c8e6c9; /* Pale Teal */
-            --job-stroke-light: var(--accent-secondary-light); /* Green Accent */
-            --certification-fill-light: #ffe0b2; /* Pale Gold */
-            --certification-stroke-light: #f57c00; /* Gold-Orange */
-            
-            /* --- Node Colors - Dark Theme --- */
-            --foundational-fill-dark: #2a3b20; /* Dark Green */
-            --foundational-stroke-dark: #a5d6a7; /* Light Green */
-            --basic-fill-dark: #1e3a5f; /* Dark Blue */
-            --basic-stroke-dark: #90caf9; /* Light Blue */
-            --intermediate-fill-dark: #4d3b00; /* Dark Yellow-Brown */
-            --intermediate-stroke-dark: #ffe082; /* Light Yellow */
-            --advanced-fill-dark: #5c3d00; /* Dark Orange-Brown */
-            --advanced-stroke-dark: #ffcc80; /* Light Orange */
-            --expert-fill-dark: #3e1c49; /* Dark Purple */
-            --expert-stroke-dark: #ce93d8; /* Light Purple */
-            --job-fill-dark: #1b5e20; /* Dark Teal */
-            --job-stroke-dark: var(--accent-secondary-dark); /* Green Accent */
-            --certification-fill-dark: #5a3f00; /* Dark Gold-Brown */
-            --certification-stroke-dark: #ffab40; /* Light Gold-Orange */
+            /* Node colors from your original theme - will be overridden by the new graph script's data */
+            --foundational-fill-light: #e6ffb3;
+            --foundational-stroke-light: #7cb342;
+            /* ... other original node colors ... */
         }
 
-        *, *::before, *::after {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        html {
-            background-color: var(--bg-current);
-            color: var(--text-primary-current);
-            transition: background-color var(--transition-speed), color var(--transition-speed);
-        }
-
-        body {
-            font-family: var(--font-primary);
-            line-height: 1.6;
-            overflow-x: hidden;
-            min-height: 100vh;
-            color: inherit; 
-            background-color: inherit;
-        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { background-color: var(--bg-current); color: var(--text-primary-current); transition: background-color var(--transition-speed), color var(--transition-speed); }
+        body { font-family: var(--font-primary); line-height: 1.6; overflow-x: hidden; min-height: 100vh; color: inherit; background-color: inherit; }
 
         html.dark-mode {
-            --bg-current: var(--bg-dark);
-            --bg-glass-current: var(--bg-glass-dark);
-            --border-glass-current: var(--border-glass-dark);
-            --text-primary-current: var(--text-primary-dark);
-            --text-secondary-current: var(--text-secondary-dark);
-            --accent-primary-current: var(--accent-primary-dark);
-            --accent-secondary-current: var(--accent-secondary-dark);
-            --shadow-current: var(--shadow-dark);
-            --node-text-current: var(--node-text-dark);
-
-            --foundational-fill: var(--foundational-fill-dark);
-            --foundational-stroke: var(--foundational-stroke-dark);
-            --basic-fill: var(--basic-fill-dark);
-            --basic-stroke: var(--basic-stroke-dark);
-            --intermediate-fill: var(--intermediate-fill-dark);
-            --intermediate-stroke: var(--intermediate-stroke-dark);
-            --advanced-fill: var(--advanced-fill-dark);
-            --advanced-stroke: var(--advanced-stroke-dark);
-            --expert-fill: var(--expert-fill-dark);
-            --expert-stroke: var(--expert-stroke-dark);
-            --job-fill: var(--job-fill-dark);
-            --job-stroke: var(--job-stroke-dark);
-            --certification-fill: var(--certification-fill-dark);
-            --certification-stroke: var(--certification-stroke-dark);
+            --bg-current: var(--bg-dark); --bg-glass-current: var(--bg-glass-dark); --border-glass-current: var(--border-glass-dark);
+            --text-primary-current: var(--text-primary-dark); --text-secondary-current: var(--text-secondary-dark);
+            --accent-primary-current: var(--accent-primary-dark); --accent-secondary-current: var(--accent-secondary-dark);
+            --shadow-current: var(--shadow-dark); --node-text-current: var(--node-text-dark);
+            /* ... other dark mode specific overrides if needed ... */
         }
-        
         html:not(.dark-mode) {
-            --bg-current: var(--bg-light);
-            --bg-glass-current: var(--bg-glass-light);
-            --border-glass-current: var(--border-glass-light);
-            --text-primary-current: var(--text-primary-light);
-            --text-secondary-current: var(--text-secondary-light);
-            --accent-primary-current: var(--accent-primary-light);
-            --accent-secondary-current: var(--accent-secondary-light);
-            --shadow-current: var(--shadow-light);
-            --node-text-current: var(--node-text-light);
-
-            --foundational-fill: var(--foundational-fill-light);
-            --foundational-stroke: var(--foundational-stroke-light);
-            --basic-fill: var(--basic-fill-light);
-            --basic-stroke: var(--basic-stroke-light);
-            --intermediate-fill: var(--intermediate-fill-light);
-            --intermediate-stroke: var(--intermediate-stroke-light);
-            --advanced-fill: var(--advanced-fill-light);
-            --advanced-stroke: var(--advanced-stroke-light);
-            --expert-fill: var(--expert-fill-light);
-            --expert-stroke: var(--expert-stroke-light);
-            --job-fill: var(--job-fill-light);
-            --job-stroke: var(--job-stroke-light);
-            --certification-fill: var(--certification-fill-light);
-            --certification-stroke: var(--certification-stroke-light);
+            --bg-current: var(--bg-light); --bg-glass-current: var(--bg-glass-light); --border-glass-current: var(--border-glass-light);
+            --text-primary-current: var(--text-primary-light); --text-secondary-current: var(--text-secondary-light);
+            --accent-primary-current: var(--accent-primary-light); --accent-secondary-current: var(--accent-secondary-light);
+            --shadow-current: var(--shadow-light); --node-text-current: var(--node-text-light);
+            /* ... other light mode specific overrides if needed ... */
         }
         
-        .page-wrapper {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        .page-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px 0;
-            margin-bottom: 30px;
-        }
-
-        .page-title {
-            font-size: 2.5em;
-            font-weight: 700;
-            color: var(--accent-primary-current);
-            letter-spacing: -0.5px;
-            transition: color var(--transition-speed);
-        }
-
-        .dark-mode-toggle {
-            display: flex;
-            align-items: center;
-            cursor: pointer;
-        }
-        .dark-mode-toggle input[type="checkbox"] {
-            display: none;
-        }
-        .toggle-slider {
-            width: 50px;
-            height: 26px;
-            background-color: #ccc;
-            border-radius: 26px;
-            position: relative;
-            transition: background-color var(--transition-speed);
-        }
-        .toggle-slider::before {
-            content: '';
-            position: absolute;
-            width: 22px;
-            height: 22px;
-            border-radius: 50%;
-            background-color: white;
-            top: 2px;
-            left: 2px;
-            transition: transform var(--transition-speed);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        }
-        .dark-mode-toggle input:checked + .toggle-slider {
-            background-color: var(--accent-primary-current);
-        }
-        .dark-mode-toggle input:checked + .toggle-slider::before {
-            transform: translateX(24px);
-        }
-        .toggle-icon {
-            margin-left: 10px;
-            font-size: 1.2em;
-            color: var(--text-secondary-current);
-            transition: color var(--transition-speed);
-        }
+        .page-wrapper { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .page-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; margin-bottom: 30px; }
+        .page-title { font-size: 2.5em; font-weight: 700; color: var(--accent-primary-current); letter-spacing: -0.5px; transition: color var(--transition-speed); }
+        .dark-mode-toggle { display: flex; align-items: center; cursor: pointer; }
+        .dark-mode-toggle input[type="checkbox"] { display: none; }
+        .toggle-slider { width: 50px; height: 26px; background-color: #ccc; border-radius: 26px; position: relative; transition: background-color var(--transition-speed); }
+        .toggle-slider::before { content: ''; position: absolute; width: 22px; height: 22px; border-radius: 50%; background-color: white; top: 2px; left: 2px; transition: transform var(--transition-speed); box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .dark-mode-toggle input:checked + .toggle-slider { background-color: var(--accent-primary-current); }
+        .dark-mode-toggle input:checked + .toggle-slider::before { transform: translateX(24px); }
+        .toggle-icon { margin-left: 10px; font-size: 1.2em; color: var(--text-secondary-current); transition: color var(--transition-speed); }
         html.dark-mode .toggle-icon { color: var(--accent-primary-current); }
 
-        .content-section {
-            background: var(--bg-glass-current);
-            border: 1px solid var(--border-glass-current);
-            border-radius: var(--border-radius-main);
-            padding: 25px;
-            margin-bottom: 30px;
-            box-shadow: var(--shadow-current);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            transition: background var(--transition-speed), border var(--transition-speed), box-shadow var(--transition-speed), color var(--transition-speed);
-        }
-        
-        .content-section h3 {
-            font-size: 1.5em;
-            font-weight: 600;
-            color: var(--accent-primary-current);
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid var(--accent-primary-current);
-            transition: color var(--transition-speed), border-color var(--transition-speed);
-        }
-        
-        .content-section p, 
-        .content-section li {
-            color: var(--text-secondary-current);
-            font-size: 0.95em;
-            margin-bottom: 10px;
-            transition: color var(--transition-speed);
-        }
-        .content-section strong {
-            color: var(--text-primary-current);
-            font-weight: 600;
-            transition: color var(--transition-speed);
-        }
+        .content-section { background: var(--bg-glass-current); border: 1px solid var(--border-glass-current); border-radius: var(--border-radius-main); padding: 25px; margin-bottom: 30px; box-shadow: var(--shadow-current); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); transition: background var(--transition-speed), border var(--transition-speed), box-shadow var(--transition-speed), color var(--transition-speed); }
+        .content-section h3 { font-size: 1.5em; font-weight: 600; color: var(--accent-primary-current); margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid var(--accent-primary-current); transition: color var(--transition-speed), border-color var(--transition-speed); }
+        .content-section p, .content-section li { color: var(--text-secondary-current); font-size: 0.95em; margin-bottom: 10px; transition: color var(--transition-speed); }
+        .content-section strong { color: var(--text-primary-current); font-weight: 600; transition: color var(--transition-speed); }
 
-        #visNetwork {
+        /* Styles for the graph container itself. The new graph script sets its own background. */
+        #visNetwork { 
             height: 700px; 
-            width: 100%;
-            background-color: transparent; 
-            border-radius: var(--border-radius-small);
-            cursor: grab;
-            border: 2px solid var(--border-glass-current);
-            position: relative; /* For CSS2DRenderer positioning */
+            width: 100%; 
+            /* background-color: transparent; NO - new script controls this */
+            border-radius: var(--border-radius-small); 
+            cursor: grab; 
+            border: 2px solid var(--border-glass-current); 
+            position: relative; /* Needed for loading message */
         }
-        #visNetwork:active {
-            cursor: grabbing;
-        }
+        #visNetwork:active { cursor: grabbing; }
 
-        .legend ul {
-            list-style: none;
-            padding: 0;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 15px;
-        }
-        .legend li {
-            /* Explicitly set li text color to adapt with theme */
-            color: var(--text-secondary-current); 
-            padding: 8px 0;
-            border-bottom: 1px dashed var(--border-glass-current);
-            transition: border-color var(--transition-speed), color var(--transition-speed);
-        }
+        .legend ul { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; }
+        .legend li { color: var(--text-secondary-current); padding: 8px 0; border-bottom: 1px dashed var(--border-glass-current); transition: border-color var(--transition-speed), color var(--transition-speed); }
         .legend li:last-child { border-bottom: none; }
-
+        /* Legend colors would need to be updated if you want them to match the new graph node colors */
         .legend-color { font-weight: 600; }
-        .foundational-legend-color { color: var(--foundational-stroke); }
-        .basic-legend-color { color: var(--basic-stroke); }
-        .intermediate-legend-color { color: var(--intermediate-stroke); }
-        .advanced-legend-color { color: var(--advanced-stroke); }
-        .expert-legend-color { color: var(--expert-stroke); }
-        .job-legend-color { color: var(--job-stroke); }
-        .certification-legend-color { color: var(--certification-stroke); }
+        /* Example: .foundational-legend-color { color: #FF6F61; } /* Reconnaissance color */
 
-        .soft-skill-text, .resource-text {
-            color: var(--text-secondary-current);
-            transition: color var(--transition-speed);
-        }
+        .soft-skill-text, .resource-text { color: var(--text-secondary-current); transition: color var(--transition-speed); }
         
-        .accordion-item {
-            margin-bottom: 15px;
-            border-radius: var(--border-radius-small);
-            overflow: hidden;
-            border: 1px solid var(--border-glass-current);
-            transition: border-color var(--transition-speed);
-        }
-        .accordion-header {
-            background-color: rgba(0,0,0,0.03);
-            padding: 15px 20px;
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: background-color var(--transition-speed);
-        }
-        html.dark-mode .accordion-header {
-            background-color: rgba(255,255,255,0.05);
-        }
-        .accordion-header:hover {
-            background-color: rgba(0,0,0,0.06);
-        }
-        html.dark-mode .accordion-header:hover {
-             background-color: rgba(255,255,255,0.08);
-        }
-        .accordion-header strong {
-            font-size: 1.1em;
-            color: var(--text-primary-current);
-        }
-        .accordion-icon {
-            font-size: 1em;
-            color: var(--accent-primary-current);
-            transition: transform var(--transition-speed);
-        }
-        .accordion-item.active .accordion-icon {
-            transform: rotate(45deg);
-        }
-        .accordion-content {
-            max-height: 0;
-            overflow: hidden;
-            padding: 0 20px;
-            background-color: transparent;
-            transition: max-height 0.4s ease-out, padding var(--transition-speed);
-        }
-        .accordion-item.active .accordion-content {
-            max-height: 1000px; 
-            padding: 20px;
-        }
-        .accordion-content ul {
-            list-style-position: inside;
-            padding-left: 5px;
-        }
+        .accordion-item { margin-bottom: 15px; border-radius: var(--border-radius-small); overflow: hidden; border: 1px solid var(--border-glass-current); transition: border-color var(--transition-speed); }
+        .accordion-header { background-color: rgba(0,0,0,0.03); padding: 15px 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background-color var(--transition-speed); }
+        html.dark-mode .accordion-header { background-color: rgba(255,255,255,0.05); }
+        .accordion-header:hover { background-color: rgba(0,0,0,0.06); }
+        html.dark-mode .accordion-header:hover { background-color: rgba(255,255,255,0.08); }
+        .accordion-header strong { font-size: 1.1em; color: var(--text-primary-current); }
+        .accordion-icon { font-size: 1em; color: var(--accent-primary-current); transition: transform var(--transition-speed); }
+        .accordion-item.active .accordion-icon { transform: rotate(45deg); }
+        .accordion-content { max-height: 0; overflow: hidden; padding: 0 20px; background-color: transparent; transition: max-height 0.4s ease-out, padding var(--transition-speed); }
+        .accordion-item.active .accordion-content { max-height: 1000px; padding: 20px; }
+        .accordion-content ul { list-style-position: inside; padding-left: 5px; }
         .accordion-content ul li { margin-bottom: 8px; }
 
-        .loading-message {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 1.2em;
-            color: var(--text-secondary-current);
-            text-align: center;
-        }
+        .loading-message { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 1.2em; color: var(--text-secondary-current); text-align: center; padding: 20px; }
 
-        #node-info-panel {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            padding: 15px;
-            background: var(--bg-glass-current);
-            border: 1px solid var(--border-glass-current);
-            border-radius: var(--border-radius-small);
-            box-shadow: var(--shadow-current);
-            color: var(--text-primary-current);
-            max-width: 300px;
-            max-height: 250px;
-            overflow-y: auto;
-            z-index: 1000;
-            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out, background var(--transition-speed), border var(--transition-speed), box-shadow var(--transition-speed), color var(--transition-speed);
-            opacity: 0;
-            transform: translateY(20px) scale(0.95);
-            pointer-events: none; 
-        }
-        #node-info-panel.visible {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-            pointer-events: auto; 
-        }
-        #node-info-panel h4 {
-            color: var(--accent-primary-current);
-            margin-top: 0;
-            margin-bottom: 10px;
-            font-size: 1.1em;
-        }
-        #node-info-panel p {
-            font-size: 0.9em;
-            margin-bottom: 0;
-            color: var(--text-secondary-current);
-        }
-
+        /* Node info panel is not directly used by the new graph script for on-click info */
+        #node-info-panel { display: none; /* Hide if not used by new graph */ }
 
         @media (max-width: 768px) {
-            .page-title { font-size: 2em; }
-            .page-header { flex-direction: column; align-items: flex-start; gap: 15px; }
-            .content-section { padding: 20px; }
-            .legend ul { grid-template-columns: 1fr; }
-            #visNetwork { height: 500px; } 
+            .page-title { font-size: 2em; } .page-header { flex-direction: column; align-items: flex-start; gap: 15px; }
+            .content-section { padding: 20px; } .legend ul { grid-template-columns: 1fr; } #visNetwork { height: 500px; } 
             .accordion-header strong { font-size: 1em; }
-            #node-info-panel {
-                max-width: 90%;
-                left: 5%;
-                right: 5%;
-                bottom: 10px;
-            }
         }
         @media (max-width: 480px) {
-            .page-title { font-size: 1.8em; }
-            .content-section h3 { font-size: 1.3em; }
-            #visNetwork { height: 450px; }
+            .page-title { font-size: 1.8em; } .content-section h3 { font-size: 1.3em; } #visNetwork { height: 450px; }
         }
     </style>
 </head>
@@ -433,23 +148,21 @@
 
         <section class="content-section" id="roadmap-visualization">
             <h3>Career Visualization (3D)</h3>
-            <div id="visNetwork">
-                <div class="loading-message">Loading 3D Graph Libraries...</div>
+            <div id="visNetwork"> {/* The new graph script targets this ID */}
+                <div class="loading-message">Loading 3D Graph Libraries... <br>If this persists, please check your browser's Network and Console tabs for errors.</div>
             </div>
         </section>
-        <div id="node-info-panel"></div>
+        <div id="node-info-panel"></div> 
 
 
         <section class="content-section" id="legend-section">
             <h3>Legend</h3>
+            <p>Note: Legend colors below are from the original theme. The graph uses new colors defined in its data.</p>
             <ul class="legend">
-                <li><strong class="legend-color foundational-legend-color">● Foundational Skills:</strong> Core knowledge for any tech field.</li>
-                <li><strong class="legend-color basic-legend-color">● Basic Skills:</strong> Entry-level security concepts.</li>
-                <li><strong class="legend-color intermediate-legend-color">● Intermediate Skills:</strong> Building specialized knowledge.</li>
-                <li><strong class="legend-color advanced-legend-color">● Advanced Skills:</strong> Deep dive into complex topics.</li>
-                <li><strong class="legend-color expert-legend-color">● Expert Skills:</strong> Mastery and research focus.</li>
-                <li><strong class="legend-color job-legend-color">● Potential Job Roles:</strong> Career opportunities.</li>
-                <li><strong class="legend-color certification-legend-color">● Certifications:</strong> Industry qualifications.</li>
+                <li><strong class="legend-color" style="color: #FF6F61">● Reconnaissance Category</strong></li>
+                <li><strong class="legend-color" style="color: #61A0FF">● Scanning Category</strong></li>
+                <li><strong class="legend-color" style="color: #6BFF96">● Exploitation Category</strong></li>
+            
             </ul>
         </section>
 
@@ -565,296 +278,36 @@
     </div>
 
     <script>
-        let TFG; // Instance of 3D Force Graph
-        const getCssVar = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-
-        const allNodesData = [
-            // Core Start
-            { id: 'Start', label: 'Start Here', group: 'foundational', description: "Begin your ethical hacking journey." },
-
-            // Foundational Skills
-            { id: 'FoundationalIT', label: 'IT Fundamentals', group: 'foundational', description: "Core concepts of Information Technology." },
-            { id: 'CompArch', label: 'Comp. Architecture', group: 'foundational', description: "Understanding computer hardware and organization." },
-            { id: 'OSInternals', label: 'OS (Linux Focus)', group: 'foundational', description: "Operating System concepts, particularly Linux." },
-            { id: 'DataStructures', label: 'Data Struct. & Algo.', group: 'foundational', description: "Essential for problem-solving and efficient coding." },
-            { id: 'Networking', label: 'Networking (TCP/IP)', group: 'foundational', description: "Protocols, routing, and network layers." },
-            { id: 'Programming', label: 'Programming (Python, C, Bash)', group: 'foundational', description: "Scripting and development skills." },
-
-            // Basic Skills
-            { id: 'CyberSecIntro', label: 'CyberSec Intro', group: 'basic', description: "Introduction to cybersecurity principles." },
-            { id: 'BasicTools', label: 'Basic CLI Tools', group: 'basic', description: "Essential command-line utilities." },
-            { id: 'VulnIntro', label: 'Vulnerability Intro (OWASP Top 10)', group: 'basic', description: "Understanding common web vulnerabilities." },
-            { id: 'EthicalConsiderations', label: 'Ethics & Legal', group: 'basic', description: "Legal and ethical boundaries in hacking." },
-
-            // Intermediate Skills
-            { id: 'WebSec', label: 'Web App Security', group: 'intermediate', description: "In-depth web application vulnerabilities and testing." },
-            { id: 'NetSec', label: 'Network Security', group: 'intermediate', description: "Firewalls, IDS/IPS, VPNs, Nmap." },
-            { id: 'Crypto', label: 'Cryptography', group: 'intermediate', description: "Ciphers, hashing, PKI, crypto attacks." },
-            { id: 'ForensicsBasic', label: 'Digital Forensics Basics', group: 'intermediate', description: "Incident response, evidence collection." },
-            { id: 'CloudSecBasic', label: 'Cloud Security Basics', group: 'intermediate', description: "Security for AWS, Azure, GCP." },
-            { id: 'MobileSecBasic', label: 'Mobile Security Basics', group: 'intermediate', description: "Security for Android and iOS platforms." },
-            { id: 'ScriptingAdv', label: 'Advanced Scripting', group: 'intermediate', description: "Automating tasks with Python, Bash." },
-
-            // Advanced Skills
-            { id: 'MalwareAnalysis', label: 'Malware Analysis', group: 'advanced', description: "Static and dynamic malware examination." },
-            { id: 'RevEng', label: 'Reverse Engineering', group: 'advanced', description: "Disassembly, debugging (IDA Pro, Ghidra)." },
-            { id: 'ExploitDev', label: 'Exploit Development', group: 'advanced', description: "Buffer overflows, ROP, shellcoding." },
-            { id: 'AdvCloudSec', label: 'Advanced Cloud Security', group: 'advanced', description: "Deep dive into cloud platform vulnerabilities." },
-            { id: 'AdvMobileSec', label: 'Advanced Mobile Security', group: 'advanced', description: "Mobile app reverse engineering and exploitation." },
-            { id: 'AD_Enterprise', label: 'AD & Enterprise Security', group: 'advanced', description: "Attacking and defending Active Directory." },
-            { id: 'DevSecOps', label: 'DevSecOps', group: 'advanced', description: "Integrating security into development lifecycle." },
-            { id: 'ThreatIntel', label: 'Threat Intelligence', group: 'advanced', description: "Gathering and analyzing threat data." },
-            { id: 'GRC', label: 'GRC', group: 'advanced', description: "Governance, Risk, and Compliance frameworks." },
-            { id: 'Fuzzing', label: 'Fuzzing', group: 'advanced', description: "Automated vulnerability discovery." },
-            { id: 'WirelessSec', label: 'Wireless Network Security', group: 'advanced', description: "Attacking and securing Wi-Fi networks." },
-
-            // Expert Skills
-            { id: 'KernelExploit', label: 'Kernel Exploitation', group: 'expert', description: "Exploiting vulnerabilities in OS kernels." },
-            { id: 'AdvRevEng', label: 'Advanced Rev. Engineering', group: 'expert', description: "Deep dive into complex software protection." },
-            { id: 'ZeroDay', label: 'Zero-Day Research', group: 'expert', description: "Discovering unknown vulnerabilities." },
-            { id: 'AdvForensics', label: 'Advanced Forensics & IR', group: 'expert', description: "Memory forensics, complex incident reconstruction." },
-            { id: 'IoT_OT_Sec', label: 'IoT/OT Security', group: 'expert', description: "Security for embedded and industrial systems." },
-            { id: 'HardwareHacking', label: 'Hardware Hacking', group: 'expert', description: "Analyzing and exploiting hardware vulnerabilities." },
-            { id: 'SecurityResearch', label: 'Security R&D', group: 'expert', description: "Developing new tools and techniques." },
-            { id: 'ThreatHunting', label: 'Proactive Threat Hunting', group: 'expert', description: "Actively searching for threats in networks." },
-
-            // Job Roles
-            { id: 'SecAnalyst', label: 'Security Analyst', group: 'job', description: "Monitors, detects, and responds to security incidents." },
-            { id: 'PenTester', label: 'Penetration Tester', group: 'job', description: "Simulates attacks to find vulnerabilities." },
-            { id: 'WebAppPentester', label: 'Web App PenTester', group: 'job', description: "Specializes in web application security testing." },
-            { id: 'NetSecEngineer', label: 'Network Sec Engineer', group: 'job', description: "Designs and maintains secure network infrastructure." },
-            { id: 'ForensicsAnalyst', label: 'Forensics Analyst', group: 'job', description: "Investigates cybercrimes and security breaches." },
-            { id: 'MalwareResearcher', label: 'Malware Researcher', group: 'job', description: "Analyzes malware to understand its behavior." },
-            { id: 'ExploitDeveloper', label: 'Exploit Developer', group: 'job', description: "Develops exploits for vulnerabilities." },
-            { id: 'SecConsultant', label: 'Security Consultant', group: 'job', description: "Advises organizations on security best practices." },
-            { id: 'CloudSecEngineer', label: 'Cloud Security Engineer', group: 'job', description: "Secures cloud environments and services." },
-            { id: 'SOCAnalyst', label: 'SOC Analyst', group: 'job', description: "Works in a Security Operations Center." },
-            { id: 'ThreatHunter', label: 'Threat Hunter', group: 'job', description: "Proactively searches for advanced threats." },
-            { id: 'RedTeamer', label: 'Red Teamer', group: 'job', description: "Simulates advanced persistent threats." },
-            { id: 'SecurityArchitect', label: 'Security Architect', group: 'job', description: "Designs secure systems and infrastructure." },
-
-            // Certifications
-            { id: 'CertA+', label: 'CompTIA A+', group: 'certification', description: "Foundational IT hardware and software knowledge." },
-            { id: 'CertNet+', label: 'CompTIA Network+', group: 'certification', description: "Foundational networking skills." },
-            { id: 'CertSec+', label: 'CompTIA Security+', group: 'certification', description: "Baseline cybersecurity skills." },
-            { id: 'CertCEH', label: 'EC-Council CEH', group: 'certification', description: "Certified Ethical Hacker - broad overview." },
-            { id: 'CertEJPT', label: 'eLearnSecurity eJPT', group: 'certification', description: "Entry-level practical penetration testing." },
-            { id: 'CertPNPT', label: 'TCM PNPT', group: 'certification', description: "Practical Network Penetration Tester." },
-            { id: 'CertGSEC', label: 'GIAC GSEC', group: 'certification', description: "GIAC Security Essentials." },
-            { id: 'CertOSCP', label: 'OffSec OSCP', group: 'certification', description: "Offensive Security Certified Professional - highly practical." },
-            { id: 'CertOSWE', label: 'OffSec OSWE', group: 'certification', description: "Offensive Security Web Expert." },
-            { id: 'CertOSEP', label: 'OffSec OSEP', group: 'certification', description: "Offensive Security Experienced Penetration Tester." },
-            { id: 'CertCRTP', label: 'CRTP (Pentester Academy)', group: 'certification', description: "Certified Red Team Professional." },
-            { id: 'CertCISSP', label: 'ISC² CISSP', group: 'certification', description: "Certified Information Systems Security Professional - management focused." },
-            { id: 'CertGPEN', label: 'GIAC GPEN', group: 'certification', description: "GIAC Penetration Tester." },
-            { id: 'CertGWAPT', label: 'GIAC GWAPT', group: 'certification', description: "GIAC Web Application Penetration Tester." },
-            { id: 'CertGMON', label: 'GIAC GMON', group: 'certification', description: "GIAC Continuous Monitoring Certification." },
-            { id: 'CertOSEE', label: 'OffSec OSEE', group: 'certification', description: "Offensive Security Exploitation Expert - highly advanced." },
-            { id: 'CertOSCE3', label: 'OffSec OSCE³', group: 'certification', description: "OffSec Certified Expert - culmination of 3 expert certs." },
-            { id: 'CertGSE', label: 'SANS GSE', group: 'certification', description: "GIAC Security Expert - pinnacle SANS cert." },
-            { id: 'CertCREST', label: 'CREST Certifications', group: 'certification', description: "Range of CREST accredited certifications." }
-        ];
-
-        const allLinksData = [
-            { source: 'Start', target: 'FoundationalIT' }, { source: 'FoundationalIT', target: 'CompArch' }, { source: 'FoundationalIT', target: 'OSInternals' }, { source: 'FoundationalIT', target: 'Networking' }, { source: 'FoundationalIT', target: 'Programming' }, { source: 'Programming', target: 'DataStructures' },
-            { source: 'Networking', target: 'CyberSecIntro' }, { source: 'OSInternals', target: 'CyberSecIntro' }, { source: 'Programming', target: 'CyberSecIntro' }, { source: 'CyberSecIntro', target: 'BasicTools' }, { source: 'CyberSecIntro', target: 'VulnIntro' }, { source: 'CyberSecIntro', target: 'EthicalConsiderations' },
-            { source: 'VulnIntro', target: 'WebSec' }, { source: 'Networking', target: 'NetSec' }, { source: 'Programming', target: 'NetSec' }, { source: 'CyberSecIntro', target: 'Crypto' }, { source: 'OSInternals', target: 'ForensicsBasic' }, { source: 'Networking', target: 'CloudSecBasic' }, { source: 'Programming', target: 'CloudSecBasic' }, { source: 'OSInternals', target: 'MobileSecBasic' }, { source: 'Programming', target: 'MobileSecBasic' }, { source: 'Programming', target: 'ScriptingAdv' },
-            { source: 'OSInternals', target: 'MalwareAnalysis' }, { source: 'Programming', target: 'MalwareAnalysis' }, { source: 'CompArch', target: 'RevEng' }, { source: 'OSInternals', target: 'RevEng' }, { source: 'Programming', target: 'RevEng' }, { source: 'RevEng', target: 'ExploitDev' }, { source: 'Programming', target: 'ExploitDev' }, { source: 'CloudSecBasic', target: 'AdvCloudSec' }, { source: 'MobileSecBasic', target: 'AdvMobileSec' }, { source: 'NetSec', target: 'AD_Enterprise' }, { source: 'Programming', target: 'DevSecOps' }, { source: 'WebSec', target: 'DevSecOps' }, { source: 'NetSec', target: 'ThreatIntel' }, { source: 'CyberSecIntro', target: 'GRC' }, { source: 'Programming', target: 'Fuzzing' }, { source: 'NetSec', target: 'WirelessSec' },
-            { source: 'ExploitDev', target: 'KernelExploit' }, { source: 'RevEng', target: 'AdvRevEng' }, { source: 'KernelExploit', target: 'ZeroDay' }, { source: 'AdvRevEng', target: 'ZeroDay' }, { source: 'ForensicsBasic', target: 'AdvForensics' }, { source: 'MalwareAnalysis', target: 'AdvForensics' }, { source: 'CompArch', target: 'IoT_OT_Sec' }, { source: 'Networking', target: 'IoT_OT_Sec' }, { source: 'RevEng', target: 'HardwareHacking' }, { source: 'ZeroDay', target: 'SecurityResearch' }, { source: 'ThreatIntel', target: 'ThreatHunting' },
-            { source: 'CyberSecIntro', target: 'SOCAnalyst' }, { source: 'NetSec', target: 'SecAnalyst' }, { source: 'VulnIntro', target: 'SecAnalyst' }, { source: 'WebSec', target: 'WebAppPentester' }, { source: 'NetSec', target: 'PenTester' }, { source: 'ExploitDev', target: 'PenTester' }, { source: 'NetSec', target: 'NetSecEngineer' }, { source: 'ForensicsBasic', target: 'ForensicsAnalyst' }, { source: 'MalwareAnalysis', target: 'MalwareResearcher' }, { source: 'RevEng', target: 'MalwareResearcher' }, { source: 'ExploitDev', target: 'ExploitDeveloper' }, { source: 'GRC', target: 'SecConsultant' }, { source: 'AdvCloudSec', target: 'CloudSecEngineer' }, { source: 'ThreatIntel', target: 'ThreatHunter' }, { source: 'AD_Enterprise', target: 'RedTeamer' }, { source: 'ExploitDev', target: 'RedTeamer' }, { source: 'AdvCloudSec', target: 'SecurityArchitect' }, { source: 'NetSec', target: 'SecurityArchitect' }, { source: 'DevSecOps', target: 'SecurityArchitect' },
-            { source: 'FoundationalIT', target: 'CertA+' }, { source: 'Networking', target: 'CertNet+' }, { source: 'CyberSecIntro', target: 'CertSec+' },
-            { source: 'WebSec', target: 'CertCEH' }, { source: 'NetSec', target: 'CertCEH' }, { source: 'NetSec', target: 'CertEJPT' }, { source: 'WebSec', target: 'CertEJPT' }, { source: 'NetSec', target: 'CertPNPT' }, { source: 'AD_Enterprise', target: 'CertPNPT' }, { source: 'CyberSecIntro', target: 'CertGSEC' },
-            { source: 'ExploitDev', target: 'CertOSCP' }, { source: 'AD_Enterprise', target: 'CertOSCP' }, { source: 'WebSec', target: 'CertOSWE' }, { source: 'ScriptingAdv', target: 'CertOSWE' }, { source: 'MalwareAnalysis', target: 'CertOSEP' }, { source: 'AD_Enterprise', target: 'CertOSEP' }, { source: 'AD_Enterprise', target: 'CertCRTP' }, { source: 'GRC', target: 'CertCISSP' }, { source: 'NetSec', target: 'CertGPEN' }, { source: 'WebSec', target: 'CertGWAPT' }, { source: 'NetSec', target: 'CertGMON' }, { source: 'ThreatIntel', target: 'CertGMON' },
-            { source: 'KernelExploit', target: 'CertOSEE' }, { source: 'AdvRevEng', target: 'CertOSEE' }, { source: 'ZeroDay', target: 'CertOSEE' },
-            { source: 'CertOSEE', target: 'CertOSCE3' }, { source: 'CertOSEP', target: 'CertOSCE3' }, { source: 'CertOSWE', target: 'CertOSCE3' },
-            { source: 'SecurityResearch', target: 'CertGSE' }, { source: 'AdvForensics', target: 'CertGSE' },
-            { source: 'PenTester', target: 'CertCREST' }, { source: 'RedTeamer', target: 'CertCREST' },
-        ];
-
+        // Global variables for theme handling (dark mode toggle)
         const darkModeToggle = document.getElementById('darkModeToggle');
         const modeIcon = document.getElementById('modeIcon');
-        const nodeInfoPanel = document.getElementById('node-info-panel');
+        const getCssVar = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 
         function applyTheme() {
             if (darkModeToggle.checked) {
                 document.documentElement.classList.add('dark-mode');
-                modeIcon.classList.remove('fa-moon');
-                modeIcon.classList.add('fa-sun');
+                modeIcon.classList.remove('fa-moon'); modeIcon.classList.add('fa-sun');
                 localStorage.setItem('theme', 'dark');
             } else {
                 document.documentElement.classList.remove('dark-mode');
-                modeIcon.classList.remove('fa-sun');
-                modeIcon.classList.add('fa-moon');
+                modeIcon.classList.remove('fa-sun'); modeIcon.classList.add('fa-moon');
                 localStorage.setItem('theme', 'light');
             }
-            if (TFG) { 
-                updateGraphColors();
-            }
-            if (nodeInfoPanel) {
-                nodeInfoPanel.style.background = getCssVar('--bg-glass-current');
-                nodeInfoPanel.style.border = `1px solid ${getCssVar('--border-glass-current')}`;
-                nodeInfoPanel.style.boxShadow = getCssVar('--shadow-current');
-                const title = nodeInfoPanel.querySelector('h4');
-                if (title) title.style.color = getCssVar('--accent-primary-current');
-                const para = nodeInfoPanel.querySelector('p');
-                if (para) para.style.color = getCssVar('--text-secondary-current');
+            // The new graph script sets its own background color directly.
+            // If other elements need color updates based on theme, add them here.
+            const graphContainer = document.getElementById('visNetwork');
+            if (graphContainer) {
+                graphContainer.style.border = `2px solid ${getCssVar('--border-glass-current')}`;
             }
         }
 
         const savedTheme = localStorage.getItem('theme');
-        if (savedTheme === 'dark') {
-            darkModeToggle.checked = true;
-        }
+        if (savedTheme === 'dark') { darkModeToggle.checked = true; }
         applyTheme(); 
-
         darkModeToggle.addEventListener('change', applyTheme);
 
-        function getNodeColor(node) {
-            switch (node.group) {
-                case 'foundational': return getCssVar('--foundational-fill');
-                case 'basic': return getCssVar('--basic-fill');
-                case 'intermediate': return getCssVar('--intermediate-fill');
-                case 'advanced': return getCssVar('--advanced-fill');
-                case 'expert': return getCssVar('--expert-fill');
-                case 'job': return getCssVar('--job-fill');
-                case 'certification': return getCssVar('--certification-fill');
-                default: return '#cccccc';
-            }
-        }
-
-        function displayNodeInfo(node) {
-            if (node) {
-                nodeInfoPanel.innerHTML = `<h4>${node.label}</h4><p>${node.description || 'No specific description available for this topic.'}</p>`;
-                nodeInfoPanel.classList.add('visible');
-            } else {
-                nodeInfoPanel.classList.remove('visible');
-            }
-            const title = nodeInfoPanel.querySelector('h4');
-            if (title) title.style.color = getCssVar('--accent-primary-current');
-            const para = nodeInfoPanel.querySelector('p');
-            if (para) para.style.color = getCssVar('--text-secondary-current');
-        }
-        
-        function initGraph() {
-            const graphContainer = document.getElementById('visNetwork');
-            const loadingMessageElement = graphContainer.querySelector('.loading-message');
-            
-            if (loadingMessageElement) loadingMessageElement.style.display = 'none';
-
-            TFG = ForceGraph3D({ controlType: 'orbit' })(graphContainer)
-                .graphData({ nodes: allNodesData, links: allLinksData })
-                .backgroundColor('rgba(0,0,0,0)')
-                .nodeRelSize(5) 
-                .nodeVal(node => { 
-                    if (node.group === 'job') return 25;
-                    if (node.group === 'certification') return 20;
-                    return 12;
-                })
-                .nodeLabel('label') 
-                .nodeColor(getNodeColor) 
-                .nodeThreeObjectExtend(true)
-                .nodeThreeObject(node => {
-                    const group = new THREE.Group();
-                    const sphereGeometry = new THREE.SphereGeometry(TFG.nodeRelSize(), 16, 8);
-                    const sphereMaterial = new THREE.MeshLambertMaterial({
-                        color: getNodeColor(node),
-                        transparent: true,
-                        opacity: 0.85
-                    });
-                    const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
-                    group.add(sphere);
-
-                    const labelDiv = document.createElement('div');
-                    labelDiv.className = 'node-label-text';
-                    labelDiv.textContent = node.label;
-                    labelDiv.style.color = getCssVar('--node-text-current');
-                    labelDiv.style.fontSize = '10px';
-                    labelDiv.style.fontFamily = getCssVar('--font-primary');
-                    labelDiv.style.textShadow = `0 0 2px ${getCssVar('--bg-current')}`; 
-                    if (node.label.length > 18) labelDiv.style.fontSize = '8px';
-                    if (node.label.length > 25) labelDiv.style.fontSize = '7px';
-                    
-                    const label = new THREE.CSS2DObject(labelDiv);
-                    label.position.set(0, TFG.nodeRelSize() * 1.4 + 2, 0); 
-                    group.add(label);
-                    
-                    node.__threeObject = group; 
-                    return group;
-                })
-                .linkColor(() => getCssVar('--accent-primary-current'))
-                .linkWidth(0.6)
-                .linkDirectionalParticles(1)
-                .linkDirectionalParticleWidth(1.5)
-                .linkDirectionalParticleColor(() => getCssVar('--accent-secondary-current'))
-                .linkDirectionalParticleSpeed(0.006)
-                .d3Force('link', d3.forceLink(allLinksData).id(d => d.id).distance(link => {
-                    const source = link.source; const target = link.target;
-                    if (source.group === target.group) return 40;
-                    if (source.group === 'certification' || target.group === 'certification') return 35;
-                    if (source.group === 'job' || target.group === 'job') return 35;
-                    return 65;
-                }).strength(0.6))
-                .d3Force('charge', d3.forceManyBody().strength(-100))
-                .d3Force('center', d3.forceCenter(0, 0, 0).strength(0.05))
-                .onNodeClick(node => {
-                    const distance = 120;
-                    const distRatio = 1 + distance / Math.hypot(node.x, node.y, node.z);
-                    TFG.cameraPosition(
-                        { x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio },
-                        node, 2000
-                    );
-                    displayNodeInfo(node);
-                })
-                .onNodeHover(node => graphContainer.style.cursor = node ? 'pointer' : 'grab')
-                .onBackgroundClick(() => displayNodeInfo(null))
-                .cooldownTicks(200)
-                .warmupTicks(50)
-                .onEngineStop(() => TFG.zoomToFit(400, 60)); 
-
-
-            const css2DRenderer = new THREE.CSS2DRenderer();
-            css2DRenderer.setSize(graphContainer.clientWidth, graphContainer.clientHeight);
-            css2DRenderer.domElement.style.position = 'absolute';
-            css2DRenderer.domElement.style.top = '0px';
-            css2DRenderer.domElement.style.pointerEvents = 'none';
-            graphContainer.appendChild(css2DRenderer.domElement);
-
-            TFG.renderCss2D(true);
-            TFG.setCss2dRenderCallback((scene, camera) => {
-                css2DRenderer.render(scene, camera);
-            });
-            
-            window.addEventListener('resize', () => {
-                TFG.width(graphContainer.clientWidth).height(graphContainer.clientHeight);
-                css2DRenderer.setSize(graphContainer.clientWidth, graphContainer.clientHeight);
-            });
-        }
-
-        function updateGraphColors() {
-            if (!TFG) return;
-
-            TFG.linkColor(() => getCssVar('--accent-primary-current'))
-               .linkDirectionalParticleColor(() => getCssVar('--accent-secondary-current'));
-            
-            TFG.graphData().nodes.forEach(node => {
-                if (node.__threeObject) {
-                    const sphere = node.__threeObject.children.find(obj => obj instanceof THREE.Mesh);
-                    if (sphere) {
-                        sphere.material.color.set(getNodeColor(node));
-                    }
-                    const labelObj = node.__threeObject.children.find(obj => obj instanceof THREE.CSS2DObject);
-                    if (labelObj && labelObj.element) {
-                        labelObj.element.style.color = getCssVar('--node-text-current');
-                        labelObj.element.style.textShadow = `0 0 2px ${getCssVar('--bg-current')}`;
-                    }
-                }
-            });
-            TFG.scene().background = null; 
-        }
-        
-
+        // Accordion functionality
         document.addEventListener('DOMContentLoaded', () => {
-            // Accordion setup
             const accordions = document.querySelectorAll('.accordion-item');
             accordions.forEach(accordion => {
                 const header = accordion.querySelector('.accordion-header');
@@ -869,44 +322,290 @@
                 });
             });
 
-            // Function to check for libraries and initialize graph
-            function attemptInitGraph(retries = 10, delay = 300) { // Increased retries and delay
-                const graphContainer = document.getElementById('visNetwork');
+            // Function to attempt graph initialization
+            function attemptInitGraph(retries = 5, delay = 300) {
+                const graphContainer = document.getElementById('visNetwork'); // Corrected target ID
                 const loadingMessageElement = graphContainer.querySelector('.loading-message');
+                let allLibsLoaded = true; let missingLibs = [];
 
-                if (typeof ForceGraph3D !== 'undefined' &&
-                    typeof THREE !== 'undefined' &&
-                    typeof THREE.CSS2DRenderer !== 'undefined' && 
-                    typeof d3 !== 'undefined' && typeof d3.forceLink !== 'undefined' // Check d3.forceLink explicitly
-                   ) {
-                    if (loadingMessageElement) loadingMessageElement.textContent = "Initializing 3D Graph...";
+                if (typeof THREE === 'undefined') { allLibsLoaded = false; missingLibs.push('THREE.js'); }
+                if (typeof ForceGraph3D === 'undefined') { allLibsLoaded = false; missingLibs.push('ForceGraph3D'); }
+                
+                if (allLibsLoaded) {
+                    if (loadingMessageElement) loadingMessageElement.textContent = "Libraries loaded. Initializing 3D Graph...";
                     console.log("All required libraries loaded. Initializing graph...");
-                    initGraph();
+                    console.log("Three.js version detected:", (typeof THREE !== 'undefined' ? THREE.REVISION : 'N/A'));
+                    initNewGraph(); // Call the new graph initialization function
                 } else {
-                    let missing = [];
-                    if (typeof ForceGraph3D === 'undefined') missing.push('ForceGraph3D');
-                    if (typeof THREE === 'undefined') missing.push('THREE.js');
-                    else if (typeof THREE.CSS2DRenderer === 'undefined') missing.push('THREE.CSS2DRenderer');
-                    if (typeof d3 === 'undefined' || typeof d3.forceLink === 'undefined') missing.push('D3 Force');
-                    
-                    console.warn(`Required 3D graph libraries not yet loaded. Missing: ${missing.join(', ')}. Retrying (${retries} left)...`);
-                    if (loadingMessageElement) loadingMessageElement.textContent = `Loading libraries... (${missing.join(', ')} missing). Retrying...`;
-
-                    if (retries > 0) {
-                        setTimeout(() => attemptInitGraph(retries - 1, delay), delay);
-                    } else {
-                        console.error("Failed to load 3D graph libraries after multiple retries.");
+                    console.warn(`Libs not yet available. Missing: ${missingLibs.join(', ')}. Retrying (${retries} left)...`);
+                    if (loadingMessageElement) {
+                         loadingMessageElement.innerHTML = `Waiting for 3D Graph Libraries... <br>Missing: ${missingLibs.join(', ')}. Retrying... (${retries} left) <br>If this persists, ensure your browser can load scripts from CDNs.`;
+                    }
+                    if (retries > 0) { setTimeout(() => attemptInitGraph(retries - 1, delay), delay); }
+                    else {
+                        console.error("Failed to detect 3D graph libraries. Check Network/Console tabs for script load errors or earlier JS errors.");
                         if (loadingMessageElement) {
-                            loadingMessageElement.textContent = "Error: Failed to load 3D graph components. Please check your internet connection or browser console for more details, then refresh the page.";
+                            loadingMessageElement.innerHTML = "Error: Failed to load 3D graph components. <br>Please check your browser's <b>Network tab</b> for failed script loads and the <b>Console tab</b> for other errors, then refresh.";
                             loadingMessageElement.style.color = "red";
                         }
                     }
                 }
             }
-            
             attemptInitGraph();
         });
 
+        // ===================================================================================
+        // == START OF REPLACED GRAPH SCRIPT (FROM YOUR NEW EXAMPLE) ==
+        // ===================================================================================
+        function initNewGraph() {
+            const graphContainer = document.getElementById('visNetwork'); // Target the existing container
+            const loadingMessageElement = graphContainer.querySelector('.loading-message');
+            if (loadingMessageElement) loadingMessageElement.style.display = 'none';
+
+
+            // Utility for drawing rounded rectangle on canvas
+            CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
+                if (w < 2 * r) r = w / 2;
+                if (h < 2 * r) r = h / 2;
+                this.beginPath();
+                this.moveTo(x + r, y);
+                this.arcTo(x + w, y, x + w, y + h, r);
+                this.arcTo(x + w, y + h, x, y + h, r);
+                this.arcTo(x, y + h, x, y, r);
+                this.arcTo(x, y, x + w, y, r);
+                this.closePath();
+                return this;
+            };
+
+            // Data with colors, shapes and sizes (FROM YOUR NEW EXAMPLE)
+            const data = {
+                nodes: [
+                    { id: 'Reconnaissance', color: '#FF6F61', shape: 'sphere', size: 9 },
+                    { id: 'Footprinting', color: '#FF9A8D', shape: 'cube', size: 6 },
+                    { id: 'WHOIS Information', color: '#FF9A8D', shape: 'cube', size: 6 },
+                    { id: 'DNS Enumeration', color: '#FF9A8D', shape: 'cube', size: 6 },
+
+                    { id: 'Scanning', color: '#61A0FF', shape: 'cone', size: 9 },
+                    { id: 'Network Scanning', color: '#8AB8FF', shape: 'sphere', size: 5 },
+                    { id: 'Port Scanning', color: '#8AB8FF', shape: 'sphere', size: 5 },
+                    { id: 'Vulnerability Scanning', color: '#8AB8FF', shape: 'sphere', size: 5 },
+
+                    { id: 'Exploitation', color: '#6BFF96', shape: 'sphere', size: 9 },
+                    { id: 'System Hacking', color: '#9EFFB7', shape: 'cube', size: 6 },
+                    { id: 'Password Cracking', color: '#9EFFB7', shape: 'cube', size: 6 },
+                    { id: 'Privilege Escalation', color: '#9EFFB7', shape: 'cube', size: 6 },
+
+                    { id: 'Post-Exploitation', color: '#FFE66B', shape: 'cone', size: 9 },
+                    { id: 'Maintaining Access', color: '#FFF299', shape: 'sphere', size: 5 },
+                    { id: 'Clearing Logs', color: '#FFF299', shape: 'sphere', size: 5 },
+                    { id: 'Data Exfiltration', color: '#FFF299', shape: 'sphere', size: 5 },
+
+                    { id: 'Defense Evasion', color: '#FF61B6', shape: 'sphere', size: 9 },
+                    { id: 'Evading IDS/Firewalls', color: '#FF8FD1', shape: 'cube', size: 6 },
+                    { id: 'Tunneling', color: '#FF8FD1', shape: 'cube', size: 6 },
+                    { id: 'Rootkits', color: '#FF8FD1', shape: 'cube', size: 6 },
+
+                    { id: 'Web Hacking', color: '#4B6AFF', shape: 'cone', size: 9 },
+                    { id: 'SQL Injection', color: '#7A9BFF', shape: 'sphere', size: 5 },
+                    { id: 'Cross-Site Scripting (XSS)', color: '#7A9BFF', shape: 'sphere', size: 5 },
+                    { id: 'Cross-Site Request Forgery (CSRF)', color: '#7A9BFF', shape: 'sphere', size: 5 },
+
+                    { id: 'Cryptography', color: '#A661FF', shape: 'sphere', size: 9 },
+                    { id: 'Hashing', color: '#C19BFF', shape: 'cube', size: 6 },
+                    { id: 'Encryption', color: '#C19BFF', shape: 'cube', size: 6 },
+                    { id: 'Digital Signatures', color: '#C19BFF', shape: 'cube', size: 6 },
+
+                    { id: 'Social Engineering', color: '#FFB661', shape: 'sphere', size: 9 },
+                    { id: 'Phishing', color: '#FFD199', shape: 'cone', size: 5 },
+                    { id: 'Pretexting', color: '#FFD199', shape: 'cone', size: 5 },
+                    { id: 'Baiting', color: '#FFD199', shape: 'cone', size: 5 },
+                ],
+                links: [
+                    { source: 'Reconnaissance', target: 'Footprinting' },
+                    { source: 'Reconnaissance', target: 'WHOIS Information' },
+                    { source: 'Reconnaissance', target: 'DNS Enumeration' },
+
+                    { source: 'Scanning', target: 'Network Scanning' },
+                    { source: 'Scanning', target: 'Port Scanning' },
+                    { source: 'Scanning', target: 'Vulnerability Scanning' },
+
+                    { source: 'Exploitation', target: 'System Hacking' },
+                    { source: 'Exploitation', target: 'Password Cracking' },
+                    { source: 'Exploitation', target: 'Privilege Escalation' },
+
+                    { source: 'Post-Exploitation', target: 'Maintaining Access' },
+                    { source: 'Post-Exploitation', target: 'Clearing Logs' },
+                    { source: 'Post-Exploitation', target: 'Data Exfiltration' },
+
+                    { source: 'Defense Evasion', target: 'Evading IDS/Firewalls' },
+                    { source: 'Defense Evasion', target: 'Tunneling' },
+                    { source: 'Defense Evasion', target: 'Rootkits' },
+
+                    { source: 'Web Hacking', target: 'SQL Injection' },
+                    { source: 'Web Hacking', target: 'Cross-Site Scripting (XSS)' },
+                    { source: 'Web Hacking', target: 'Cross-Site Request Forgery (CSRF)' },
+
+                    { source: 'Cryptography', target: 'Hashing' },
+                    { source: 'Cryptography', target: 'Encryption' },
+                    { source: 'Cryptography', target: 'Digital Signatures' },
+
+                    { source: 'Social Engineering', target: 'Phishing' },
+                    { source: 'Social Engineering', target: 'Pretexting' },
+                    { source: 'Social Engineering', target: 'Baiting' },
+
+                    { source: 'Reconnaissance', target: 'Scanning' },
+                    { source: 'Scanning', target: 'Exploitation' },
+                    { source: 'Exploitation', target: 'Post-Exploitation' },
+                    { source: 'Post-Exploitation', target: 'Defense Evasion' },
+                    { source: 'Defense Evasion', target: 'Web Hacking' },
+                    { source: 'Web Hacking', target: 'Cryptography' },
+                    { source: 'Social Engineering', target: 'Reconnaissance' },
+                ]
+            };
+            
+            // Data Validation (keeping this crucial check)
+            const nodeIds = new Set(data.nodes.map(n => n.id));
+            let missingSourceOrTarget = false;
+            data.links.forEach((link, index) => {
+                if (!nodeIds.has(link.source)) {
+                    console.error(`Link index ${index} (source: "${link.source}", target: "${link.target}") references MISSING SOURCE node ID: "${link.source}"`);
+                    missingSourceOrTarget = true;
+                }
+                if (!nodeIds.has(link.target)) {
+                    console.error(`Link index ${index} (source: "${link.source}", target: "${link.target}") references MISSING TARGET node ID: "${link.target}"`);
+                    missingSourceOrTarget = true;
+                }
+            });
+
+            if (missingSourceOrTarget) {
+                console.error("CRITICAL: Graph data is invalid. Fix data and refresh.");
+                if (loadingMessageElement) {
+                    loadingMessageElement.innerHTML = `Error: Graph data is invalid. Some links reference non-existent nodes. <br>Please check the browser console for details. <br>Graph cannot be displayed.`;
+                    loadingMessageElement.style.color = "red";
+                    loadingMessageElement.style.display = "block";
+                }
+                return;
+            } else {
+                console.log("Graph data integrity check: All link sources/targets valid.");
+            }
+
+
+            // Create a text sprite with rounded background for each label
+            function createTextLabel(text) {
+                const fontSize = 30; 
+                const padding = 25;  
+
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+
+                ctx.font = `${fontSize}px Arial`;
+                const textWidth = ctx.measureText(text).width;
+                const width = textWidth + padding * 2;
+                const height = fontSize + padding * 2;
+
+                canvas.width = width * 2; 
+                canvas.height = height * 2;
+                ctx.scale(2, 2);
+
+                ctx.fillStyle = 'rgba(50, 50, 50, 0.85)';
+                ctx.roundRect(0, 0, width, height, 15);
+                ctx.fill();
+
+                ctx.fillStyle = 'white';
+                ctx.textBaseline = 'top';
+                ctx.fillText(text, padding, padding);
+
+                const texture = new THREE.CanvasTexture(canvas);
+                texture.minFilter = THREE.LinearFilter; 
+
+                const material = new THREE.SpriteMaterial({ map: texture, depthTest: false });
+                const sprite = new THREE.Sprite(material);
+                sprite.scale.set(width / 8, height / 8, 1); 
+                return sprite;
+            }
+
+            // Function to create custom shapes (sphere, cube, cone)
+            function createNodeShape(node) {
+                let geometry;
+                const size = node.size || 5;
+
+                switch (node.shape) {
+                    case 'cube':
+                        geometry = new THREE.BoxGeometry(size, size, size);
+                        break;
+                    case 'cone':
+                        geometry = new THREE.ConeGeometry(size / 1.5, size * 2, 8);
+                        break;
+                    case 'sphere':
+                    default:
+                        geometry = new THREE.SphereGeometry(size);
+                        break;
+                }
+                const material = new THREE.MeshPhongMaterial({ color: node.color || '#ff6600', shininess: 60 });
+                return new THREE.Mesh(geometry, material);
+            }
+
+            // Setup lighting (This needs to be done on the graph's internal scene)
+            // The new graph script handles its own scene, so we modify how lights are added.
+
+            try {
+                const Graph = ForceGraph3D()
+                    (graphContainer) // Use the existing container
+                    .graphData(data)
+                    .nodeThreeObject(node => {
+                        const obj = createNodeShape(node);
+                        const label = createTextLabel(node.id);
+                        label.position.set(0, (node.size || 5) + 5, 0); 
+                        obj.add(label);
+                        return obj;
+                    })
+                    .linkWidth(1)
+                    .linkColor(() => 'rgba(255,255,255,0.15)')
+                    .backgroundColor('#121212') // Explicitly set from new script
+                    .enableNodeDrag(true)
+                    .cooldownTicks(100)
+                    .onNodeClick(node => {
+                        // The new script has an alert, you might want to integrate this with your nodeInfoPanel later
+                        alert(`You clicked on: ${node.id}`);
+                        // Example: If you want to use your old nodeInfoPanel:
+                        // const nodeInfoPanel = document.getElementById('node-info-panel');
+                        // if (nodeInfoPanel) {
+                        //    nodeInfoPanel.innerHTML = `<h4>${node.id}</h4><p>Shape: ${node.shape}, Color: ${node.color}</p>`;
+                        //    nodeInfoPanel.style.display = 'block'; // Make it visible
+                        // }
+                    })
+                    .onBackgroundClick(() => {
+                        // Example: If you want to hide your old nodeInfoPanel:
+                        // const nodeInfoPanel = document.getElementById('node-info-panel');
+                        // if (nodeInfoPanel) nodeInfoPanel.style.display = 'none';
+                    });
+
+                // Add lights to the graph's scene
+                const light = new THREE.DirectionalLight(0xffffff, 0.8);
+                light.position.set(50, 50, 100);
+                Graph.scene().add(light);
+                const ambientLight = new THREE.AmbientLight(0x404040, 0.7); // 0x404040 is a common grey
+                Graph.scene().add(ambientLight);
+
+                Graph.cameraPosition({ z: 100 }); // Initial camera position
+
+                // Handle window resize for the new graph instance
+                window.addEventListener('resize', () => {
+                    Graph.width(graphContainer.clientWidth).height(graphContainer.clientHeight);
+                });
+
+            } catch (error) {
+                 console.error("Error during new ForceGraph3D initialization:", error);
+                if (loadingMessageElement) {
+                    loadingMessageElement.innerHTML = `Error initializing 3D graph. <br>Three.js Version: ${typeof THREE !== 'undefined' ? THREE.REVISION : 'N/A'}<br>Error: ${error.message} <br>Check console for stack trace.`;
+                    loadingMessageElement.style.color = "red";
+                    loadingMessageElement.style.display = "block";
+                }
+            }
+        }
+        // ===================================================================================
+        // == END OF REPLACED GRAPH SCRIPT ==
+        // ===================================================================================
     </script>
 </body>
 </html>
