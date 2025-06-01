@@ -3,143 +3,99 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ethical Hacking Career Roadmap - Modern UI (3D Graph)</title>
-    <!-- Google Fonts: Poppins for sleek & modern look -->
+    <title>Ethical Hacking Career Roadmap - Interactive 3D Graph</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
-    <!-- Load scripts from CDN with defer attribute - Updated to match new example -->
     <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/3d-force-graph@1.77.0/dist/3d-force-graph.min.js" defer></script>
-    
-    <!-- Font Awesome for icons -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 
     <style>
         :root {
-            /* --- Base Variables --- */
             --font-primary: 'Poppins', sans-serif;
             --transition-speed: 0.3s ease-in-out;
             --border-radius-main: 16px;
             --border-radius-small: 8px;
 
             /* --- Light Mode Colors --- */
-            --bg-light: #f0f2f5;
-            --bg-glass-light: rgba(255, 255, 255, 0.6);
-            --border-glass-light: rgba(255, 255, 255, 0.8);
-            --text-primary-light: #1c1e21;
-            --text-secondary-light: #555b6e;
-            --accent-primary-light: #007aff;
-            --accent-secondary-light: #34c759;
-            --shadow-light: 0 8px 32px 0 rgba(31, 38, 135, 0.17);
-            --node-text-light: #000000; /* Fallback, new graph script uses its own label colors */
+            --bg-light: #e9eef2; /* Softer background */
+            --bg-glass-light: rgba(255, 255, 255, 0.65);
+            --border-glass-light: rgba(220, 220, 220, 0.8);
+            --text-primary-light: #2c3e50; /* Darker blue-grey */
+            --text-secondary-light: #566573;
+            --accent-primary-light: #3498db; /* Brighter blue */
+            --accent-secondary-light: #2ecc71; /* Emerald green */
+            --shadow-light: 0 6px 24px 0 rgba(0, 0, 0, 0.08);
 
             /* --- Dark Mode Colors --- */
-            --bg-dark: #121212;
-            --bg-glass-dark: rgba(40, 40, 40, 0.6);
-            --border-glass-dark: rgba(70, 70, 70, 0.8);
-            --text-primary-dark: #FFFFFF;
-            --text-secondary-dark: #bdc1c6;
-            --accent-primary-dark: #0a84ff;
-            --accent-secondary-dark: #30d158;
-            --shadow-dark: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-            --node-text-dark: #FFFFFF; /* Fallback, new graph script uses its own label colors */
-
-            /* Node colors from your original theme - will be overridden by the new graph script's data */
-            --foundational-fill-light: #e6ffb3;
-            --foundational-stroke-light: #7cb342;
-            /* ... other original node colors ... */
+            --bg-dark: #1c1e22; /* Darker, slightly desaturated */
+            --bg-glass-dark: rgba(35, 38, 43, 0.65);
+            --border-glass-dark: rgba(50, 53, 58, 0.8);
+            --text-primary-dark: #ecf0f1; /* Light grey */
+            --text-secondary-dark: #aab8c2;
+            --accent-primary-dark: #3498db; /* Consistent blue */
+            --accent-secondary-dark: #2ecc71;
+            --shadow-dark: 0 8px 32px 0 rgba(0, 0, 0, 0.25);
         }
-
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         html { background-color: var(--bg-current); color: var(--text-primary-current); transition: background-color var(--transition-speed), color var(--transition-speed); }
         body { font-family: var(--font-primary); line-height: 1.6; overflow-x: hidden; min-height: 100vh; color: inherit; background-color: inherit; }
-
         html.dark-mode {
             --bg-current: var(--bg-dark); --bg-glass-current: var(--bg-glass-dark); --border-glass-current: var(--border-glass-dark);
             --text-primary-current: var(--text-primary-dark); --text-secondary-current: var(--text-secondary-dark);
             --accent-primary-current: var(--accent-primary-dark); --accent-secondary-current: var(--accent-secondary-dark);
-            --shadow-current: var(--shadow-dark); --node-text-current: var(--node-text-dark);
-            /* ... other dark mode specific overrides if needed ... */
+            --shadow-current: var(--shadow-dark);
         }
         html:not(.dark-mode) {
             --bg-current: var(--bg-light); --bg-glass-current: var(--bg-glass-light); --border-glass-current: var(--border-glass-light);
             --text-primary-current: var(--text-primary-light); --text-secondary-current: var(--text-secondary-light);
             --accent-primary-current: var(--accent-primary-light); --accent-secondary-current: var(--accent-secondary-light);
-            --shadow-current: var(--shadow-light); --node-text-current: var(--node-text-light);
-            /* ... other light mode specific overrides if needed ... */
+            --shadow-current: var(--shadow-light);
         }
-        
-        .page-wrapper { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .page-wrapper { max-width: 1600px; margin: 0 auto; padding: 20px; } /* Wider for larger graph */
         .page-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; margin-bottom: 30px; }
-        .page-title { font-size: 2.5em; font-weight: 700; color: var(--accent-primary-current); letter-spacing: -0.5px; transition: color var(--transition-speed); }
+        .page-title { font-size: 2.5em; font-weight: 700; color: var(--accent-primary-current); letter-spacing: -0.5px; }
         .dark-mode-toggle { display: flex; align-items: center; cursor: pointer; }
         .dark-mode-toggle input[type="checkbox"] { display: none; }
-        .toggle-slider { width: 50px; height: 26px; background-color: #ccc; border-radius: 26px; position: relative; transition: background-color var(--transition-speed); }
+        .toggle-slider { width: 50px; height: 26px; background-color: #bdc3c7; border-radius: 26px; position: relative; transition: background-color var(--transition-speed); }
         .toggle-slider::before { content: ''; position: absolute; width: 22px; height: 22px; border-radius: 50%; background-color: white; top: 2px; left: 2px; transition: transform var(--transition-speed); box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
         .dark-mode-toggle input:checked + .toggle-slider { background-color: var(--accent-primary-current); }
         .dark-mode-toggle input:checked + .toggle-slider::before { transform: translateX(24px); }
-        .toggle-icon { margin-left: 10px; font-size: 1.2em; color: var(--text-secondary-current); transition: color var(--transition-speed); }
+        .toggle-icon { margin-left: 10px; font-size: 1.2em; color: var(--text-secondary-current); }
         html.dark-mode .toggle-icon { color: var(--accent-primary-current); }
-
-        .content-section { background: var(--bg-glass-current); border: 1px solid var(--border-glass-current); border-radius: var(--border-radius-main); padding: 25px; margin-bottom: 30px; box-shadow: var(--shadow-current); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); transition: background var(--transition-speed), border var(--transition-speed), box-shadow var(--transition-speed), color var(--transition-speed); }
-        .content-section h3 { font-size: 1.5em; font-weight: 600; color: var(--accent-primary-current); margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid var(--accent-primary-current); transition: color var(--transition-speed), border-color var(--transition-speed); }
-        .content-section p, .content-section li { color: var(--text-secondary-current); font-size: 0.95em; margin-bottom: 10px; transition: color var(--transition-speed); }
-        .content-section strong { color: var(--text-primary-current); font-weight: 600; transition: color var(--transition-speed); }
-
-        /* Styles for the graph container itself. The new graph script sets its own background. */
-        #visNetwork { 
-            height: 700px; 
-            width: 100%; 
-            /* background-color: transparent; NO - new script controls this */
-            border-radius: var(--border-radius-small); 
-            cursor: grab; 
-            border: 2px solid var(--border-glass-current); 
-            position: relative; /* Needed for loading message */
-            overflow: hidden;
-        }
+        .content-section { background: var(--bg-glass-current); border: 1px solid var(--border-glass-current); border-radius: var(--border-radius-main); padding: 25px; margin-bottom: 30px; box-shadow: var(--shadow-current); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+        .content-section h3 { font-size: 1.5em; font-weight: 600; color: var(--accent-primary-current); margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid var(--accent-primary-current); }
+        .content-section p, .content-section li { color: var(--text-secondary-current); font-size: 0.95em; margin-bottom: 10px; }
+        .content-section strong { color: var(--text-primary-current); font-weight: 600; }
+        #visNetwork { height: 80vh; /* Use viewport height */ width: 100%; border-radius: var(--border-radius-small); cursor: grab; border: 1px solid var(--border-glass-current); position: relative; overflow: hidden; }
         #visNetwork:active { cursor: grabbing; }
-
-        .legend ul { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; }
-        .legend li { color: var(--text-secondary-current); padding: 8px 0; border-bottom: 1px dashed var(--border-glass-current); transition: border-color var(--transition-speed), color var(--transition-speed); }
-        .legend li:last-child { border-bottom: none; }
-        /* Legend colors would need to be updated if you want them to match the new graph node colors */
-        .legend-color { font-weight: 600; }
-        /* Example: .foundational-legend-color { color: #FF6F61; } /* Reconnaissance color */
-
-        .soft-skill-text, .resource-text { color: var(--text-secondary-current); transition: color var(--transition-speed); }
-        
-        .accordion-item { margin-bottom: 15px; border-radius: var(--border-radius-small); overflow: hidden; border: 1px solid var(--border-glass-current); transition: border-color var(--transition-speed); }
-        .accordion-header { background-color: rgba(0,0,0,0.03); padding: 15px 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background-color var(--transition-speed); }
-        html.dark-mode .accordion-header { background-color: rgba(255,255,255,0.05); }
-        .accordion-header:hover { background-color: rgba(0,0,0,0.06); }
-        html.dark-mode .accordion-header:hover { background-color: rgba(255,255,255,0.08); }
+        .legend ul { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 8px; }
+        .legend li { color: var(--text-secondary-current); padding: 5px 0; font-size: 0.85em; }
+        .legend-color-indicator { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: middle; border: 1px solid rgba(120,120,120,0.3); }
+        .legend-text { vertical-align: middle; }
+        .accordion-item { margin-bottom: 15px; border-radius: var(--border-radius-small); overflow: hidden; border: 1px solid var(--border-glass-current); }
+        .accordion-header { background-color: rgba(0,0,0,0.02); padding: 15px 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        html.dark-mode .accordion-header { background-color: rgba(255,255,255,0.03); }
+        .accordion-header:hover { background-color: rgba(0,0,0,0.04); }
+        html.dark-mode .accordion-header:hover { background-color: rgba(255,255,255,0.06); }
         .accordion-header strong { font-size: 1.1em; color: var(--text-primary-current); }
         .accordion-icon { font-size: 1em; color: var(--accent-primary-current); transition: transform var(--transition-speed); }
         .accordion-item.active .accordion-icon { transform: rotate(45deg); }
-        .accordion-content { max-height: 0; overflow: hidden; padding: 0 20px; background-color: transparent; transition: max-height 0.4s ease-out, padding var(--transition-speed); }
-        .accordion-item.active .accordion-content { max-height: 1000px; padding: 20px; }
+        .accordion-content { max-height: 0; overflow: hidden; padding: 0 20px; background-color: transparent; transition: max-height 0.5s ease-out, padding var(--transition-speed); }
+        .accordion-item.active .accordion-content { max-height: 1500px; padding: 20px; }
         .accordion-content ul { list-style-position: inside; padding-left: 5px; }
         .accordion-content ul li { margin-bottom: 8px; }
-
         .loading-message { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 1.2em; color: var(--text-secondary-current); text-align: center; padding: 20px; }
-
-        /* Node info panel is not directly used by the new graph script for on-click info */
-        #node-info-panel { display: none; /* Hide if not used by new graph */ }
-
         @media (max-width: 768px) {
             .page-title { font-size: 2em; } .page-header { flex-direction: column; align-items: flex-start; gap: 15px; }
-            .content-section { padding: 20px; } .legend ul { grid-template-columns: 1fr; } #visNetwork { height: 500px; } 
+            .content-section { padding: 20px; } .legend ul { grid-template-columns: 1fr; } #visNetwork { height: 60vh; } 
             .accordion-header strong { font-size: 1em; }
-        }
-        @media (max-width: 480px) {
-            .page-title { font-size: 1.8em; } .content-section h3 { font-size: 1.3em; } #visNetwork { height: 450px; }
         }
     </style>
 </head>
 <body>
     <div class="page-wrapper">
         <header class="page-header">
-            <h1 class="page-title">Ethical Hacking Roadmap (3D)</h1>
+            <h1 class="page-title">Ethical Hacking Roadmap (3D Interactive)</h1>
             <label class="dark-mode-toggle" for="darkModeToggle" aria-label="Toggle dark mode">
                 <input type="checkbox" id="darkModeToggle">
                 <span class="toggle-slider"></span>
@@ -148,100 +104,98 @@
         </header>
 
         <section class="content-section" id="roadmap-visualization">
-            <h3>Career Visualization (3D)</h3>
-            <div id="visNetwork"> {/* The new graph script targets this ID */}
-                <div class="loading-message">Loading 3D Graph Libraries... <br>If this persists, please check your browser's Network and Console tabs for errors.</div>
+            <h3>Career Visualization (3D) - Click nodes to explore!</h3>
+            <div id="visNetwork">
+                <div class="loading-message">Loading 3D Graph Libraries...</div>
             </div>
         </section>
-        <div id="node-info-panel"></div> 
-
 
         <section class="content-section" id="legend-section">
             <h3>Legend</h3>
-            <p>Note: Legend colors below are from the original theme. The graph uses new colors defined in its data.</p>
-            <ul class="legend">
-                <li><strong class="legend-color" style="color: #FF6F61">● Reconnaissance Category</strong></li>
-                <li><strong class="legend-color" style="color: #61A0FF">● Scanning Category</strong></li>
-                <li><strong class="legend-color" style="color: #6BFF96">● Exploitation Category</strong></li>
-            
+            <p>Node colors and shapes represent different categories:</p>
+             <ul class="legend">
+                <li><span class="legend-color-indicator" style="background-color: #A0D2DB;"></span><span class="legend-text">Fundamentals</span></li>
+                <li><span class="legend-color-indicator" style="background-color: #FEC89A;"></span><span class="legend-text">Reconnaissance</span></li>
+                <li><span class="legend-color-indicator" style="background-color: #A2D2FF;"></span><span class="legend-text">Scanning</span></li>
+                <li><span class="legend-color-indicator" style="background-color: #A9DFBF;"></span><span class="legend-text">Exploitation</span></li>
+                <li><span class="legend-color-indicator" style="background-color: #C7CEEA;"></span><span class="legend-text">Web Hacking</span></li>
+                <li><span class="legend-color-indicator" style="background-color: #FFEE93;"></span><span class="legend-text">Post-Exploitation</span></li>
+                <li><span class="legend-color-indicator" style="background-color: #F9A8D4;"></span><span class="legend-text">Defense Evasion</span></li>
+                <li><span class="legend-color-indicator" style="background-color: #D4A0F9;"></span><span class="legend-text">Cryptography</span></li>
+                <li><span class="legend-color-indicator" style="background-color: #FFB347;"></span><span class="legend-text">Social Engineering</span></li>
+                <li><span class="legend-color-indicator" style="background-color: #B2BABB;"></span><span class="legend-text">Tools</span></li>
+                <li><span class="legend-color-indicator" style="background-color: #E0BBE4;"></span><span class="legend-text">Certifications</span></li>
+                <li><span class="legend-color-indicator" style="background-color: #87CEEB;"></span><span class="legend-text">Cloud Security</span></li>
+                <li><span class="legend-color-indicator" style="background-color: #98FB98;"></span><span class="legend-text">Mobile Security</span></li>
             </ul>
         </section>
 
-        <section class="content-section" id="learning-path">
+        <!-- Accordion sections (Learning Path, Certs, Soft Skills, Resources) remain the same as your previous version -->
+        <!-- ... (Paste your existing accordion HTML here for brevity) ... -->
+         <section class="content-section" id="learning-path">
             <h3>Recommended Learning Path</h3>
             <div class="accordion">
                 <div class="accordion-item">
-                    <div class="accordion-header">
-                        <strong>Phase 1: Foundational & Basic (3-9 months)</strong>
-                        <i class="fas fa-plus accordion-icon"></i>
-                    </div>
+                    <div class="accordion-header"><strong>Phase 1: Foundational & Basic (6-12 months)</strong><i class="fas fa-plus accordion-icon"></i></div>
                     <div class="accordion-content">
                         <ul>
-                            <li><strong>Foundational:</strong> Dive deep into computer architecture, operating systems (especially Linux), networking (TCP/IP, common protocols, routing), and strong programming logic (Python, C, Bash are key). Understand fundamental data structures, algorithms, and OS internals.</li>
-                            <li><strong>Basic Security:</strong> Grasp cybersecurity principles, common vulnerabilities (OWASP Top 10 intro), basic command-line tools, and ethical considerations.</li>
-                            <li><strong>Certifications:</strong> CompTIA A+, Network+, Security+ are excellent starting points.</li>
+                            <li><strong>Core IT Knowledge:</strong> Computer Architecture, OS (Linux CLI, Windows Basics), Networking (TCP/IP, OSI, HTTP, DNS), Virtualization.</li>
+                            <li><strong>Programming & Scripting:</strong> Python (essential), Bash. Optional: C/C++.</li>
+                            <li><strong>Basic Security Concepts:</strong> CIA Triad, Risk Mgt, Attack Vectors, OWASP Top 10 Intro, Malware Types, Ethics.</li>
+                            <li><strong>Tools:</strong> CLI basics, Wireshark, Nmap (basics).</li>
+                            <li><strong>Certifications:</strong> CompTIA A+, Network+, Security+.</li>
                         </ul>
                     </div>
                 </div>
                 <div class="accordion-item">
-                    <div class="accordion-header">
-                        <strong>Phase 2: Intermediate Specialization (6-18 months)</strong>
-                        <i class="fas fa-plus accordion-icon"></i>
-                    </div>
+                    <div class="accordion-header"><strong>Phase 2: Intermediate Specialization (9-18 months)</strong><i class="fas fa-plus accordion-icon"></i></div>
                     <div class="accordion-content">
                         <ul>
-                            <li><strong>Web Security:</strong> Focus on web application vulnerabilities, secure coding, web proxies (Burp Suite).</li>
-                            <li><strong>Network Security:</strong> Learn firewall concepts, IDS/IPS, VPNs, and network scanning tools (Nmap).</li>
-                            <li><strong>Cryptography:</strong> Understand ciphers, hashing, PKI, and common crypto attacks.</li>
-                            <li><strong>Digital Forensics:</strong> Basic incident response, evidence collection, and analysis tools.</li>
-                            <li><strong>Cloud & Mobile Security Basics:</strong> Introduction to specific vulnerabilities and best practices for common platforms.</li>
-                            <li><span class="soft-skill-text"><strong>Communication & Documentation:</strong></span> Vital for explaining findings and creating reports.</li>
-                            <li><strong>Certifications:</strong> EC-Council CEH, eJPT, PNPT, GIAC GSEC.</li>
+                            <li><strong>Ethical Hacking Process:</strong> Recon (OSINT, DNS/Subdomain Enum), Scanning (Advanced Nmap, Vuln Scanners like Nessus/OpenVAS), Web App Security (HTTP, OWASP Top 10 detailed: SQLi, XSS, CSRF, SSRF, LFI/RFI; Proxies: Burp Suite/ZAP), System Hacking (Password Cracking, Basic Metasploit), Network Security (Firewalls, IDS/IPS, VPNs), Crypto Basics.</li>
+                            <li><strong>Intro to:</strong> Cloud Security (AWS/Azure/GCP basics), Mobile Security (Android/iOS basics).</li>
+                            <li><strong>Soft Skills:</strong> Documentation & Reporting.</li>
+                            <li><strong>Certifications:</strong> eJPT, PNPT, (ISC)² SSCP, EC-Council CEH (Practical).</li>
                         </ul>
                     </div>
                 </div>
                 <div class="accordion-item">
-                    <div class="accordion-header">
-                        <strong>Phase 3: Advanced Deep Dive (1-3 years)</strong>
-                        <i class="fas fa-plus accordion-icon"></i>
-                    </div>
+                    <div class="accordion-header"><strong>Phase 3: Advanced Deep Dive (1-3 years)</strong><i class="fas fa-plus accordion-icon"></i></div>
                     <div class="accordion-content">
                         <ul>
-                           <li><strong>Malware Analysis:</strong> Static and dynamic analysis techniques, sandboxing, behavioral analysis.</li>
-                            <li><strong>Reverse Engineering:</strong> Disassemblers (IDA Pro, Ghidra), debuggers (x64dbg), understanding assembly.</li>
-                            <li><strong>Exploitation Development:</strong> Buffer overflows, ROP chains, shellcoding, heap exploitation, kernel exploitation.</li>
-                            <li><strong>Advanced Cloud/Mobile Security:</strong> Deep dive into specific cloud provider vulnerabilities, mobile app reverse engineering.</li>
-                            <li><strong>Active Directory/Enterprise Security:</strong> Understanding large network attack vectors.</li>
-                            <li><strong>DevSecOps:</strong> Integrating security into the SDLC.</li>
-                            <li><strong>Threat Intelligence:</strong> Gathering, analyzing, and acting on threat data.</li>
-                            <li><strong>GRC (Governance, Risk, Compliance):</strong> Frameworks, policies, and regulations.</li>
-                            <li><strong>Fuzzing:</strong> Finding vulnerabilities through automated input generation.</li>
-                            <li><strong>Certifications:</strong> OSCP, OSWE, OSEP, CRTP, SANS GIAC (GPEN, GWAPT, GMON).</li>
+                            <li><strong>Exploitation Development:</strong> Assembly, Debuggers (GDB, WinDbg), Disassemblers (IDA Pro, Ghidra), Buffer Overflows, ROP, Shellcoding.</li>
+                            <li><strong>Advanced Web Hacking:</strong> Complex Injections, API Security, Advanced XSS, Race Conditions.</li>
+                            <li><strong>Active Directory Exploitation:</strong> Kerberos attacks, Pass-the-Hash/Ticket, BloodHound, Mimikatz.</li>
+                            <li><strong>Malware Analysis:</strong> Static/Dynamic analysis, Sandboxing, Basic RE.</li>
+                            <li><strong>Post-Exploitation:</strong> Advanced Pivoting, Lateral Movement, Persistence, Data Exfil.</li>
+                            <li><strong>Defense Evasion:</strong> Bypassing AV, IDS/IPS.</li>
+                            <li><strong>Cloud/Mobile Security (Deep Dive).</strong></li>
+                            <li><strong>Fuzzing.</strong></li>
+                            <li><strong>Certifications:</strong> OSCP, OSWE, OSEP, CRTP, CISSP, SANS GIAC (GPEN, GWAPT, GXPN).</li>
                         </ul>
                     </div>
                 </div>
                  <div class="accordion-item">
-                    <div class="accordion-header">
-                        <strong>Phase 4: Expert & Research (2+ years)</strong>
-                        <i class="fas fa-plus accordion-icon"></i>
-                    </div>
+                    <div class="accordion-header"><strong>Phase 4: Expert & Research (2+ years ongoing)</strong><i class="fas fa-plus accordion-icon"></i></div>
                     <div class="accordion-content">
                         <ul>
-                            <li><strong>Security Research & Development:</strong> Identifying new vulnerabilities, advanced threat modeling, developing custom tools.</li>
-                            <li><strong>Zero-Day Discovery:</strong> Advanced techniques for finding previously unknown vulnerabilities.</li>
-                            <li><strong>Advanced Forensics & Incident Response:</strong> Memory forensics, malware attribution, complex incident reconstruction.</li>
-                            <li><strong>IoT/OT Security:</strong> Specialized knowledge for embedded systems, industrial control systems.</li>
-                            <li><strong>Certifications:</strong> OSEE, OSCE3, SANS GSE, CREST.</li>
-                            <li><span class="soft-skill-text"><strong>Mentorship & Leadership:</strong></span> Guiding professionals, leading initiatives.</li>
+                            <li><strong>Security Research & 0-day Discovery.</strong></li>
+                            <li><strong>Advanced Reverse Engineering.</strong></li>
+                            <li><strong>Hardware Hacking & IoT/OT Security.</strong></li>
+                            <li><strong>Red Teaming & Adversary Emulation.</strong></li>
+                            <li><strong>Threat Intelligence & Modeling.</strong></li>
+                            <li><strong>DevSecOps.</strong></li>
+                            <li><strong>Advanced Cryptography.</strong></li>
+                            <li><strong>Specialized Areas:</strong> Forensics, IR Leadership.</li>
+                            <li><strong>Mentorship, Leadership & Community Contribution.</strong></li>
+                            <li><strong>Certifications:</strong> OSEE, OSCE³, SANS GSE, CREST.</li>
                         </ul>
                     </div>
                 </div>
             </div>
         </section>
-
         <section class="content-section" id="certifications-path">
             <h3>Certifications Path</h3>
-            <p>Practical experience and continuous learning are paramount. Focus on hands-on labs.</p>
+             <p>Practical experience and continuous learning are paramount. Focus on hands-on labs.</p>
             <ul>
                 <li><strong>Foundational/Basic:</strong> CompTIA A+, Network+, Security+</li>
                 <li><strong>Intermediate:</strong> CEH, eJPT, PNPT, GIAC GSEC</li>
@@ -249,37 +203,35 @@
                 <li><strong>Expert:</strong> OSEE, OSCE3, SANS GSE, CREST certifications</li>
             </ul>
         </section>
-
         <section class="content-section" id="soft-skills">
             <h3>Crucial Soft Skills</h3>
             <ul>
-                <li><span class="soft-skill-text"><strong>Ethics & Integrity:</strong></span> Paramount. Adhere to legal/ethical boundaries.</li>
-                <li><span class="soft-skill-text"><strong>Problem Solving:</strong></span> Deconstruct puzzles, find creative solutions.</li>
-                <li><span class="soft-skill-text"><strong>Communication:</strong></span> Articulate risks and findings clearly.</li>
-                <li><span class="soft-skill-text"><strong>Continuous Learning:</strong></span> Cybersecurity evolves constantly.</li>
-                <li><span class="soft-skill-text"><strong>Attention to Detail:</strong></span> Identify subtle vulnerabilities.</li>
-                <li><span class="soft-skill-text"><strong>Patience & Persistence:</strong></span> Hacking involves trial and error.</li>
-                <li><span class="soft-skill-text"><strong>Teamwork & Collaboration:</strong></span> Work with diverse teams.</li>
-                <li><span class="soft-skill-text"><strong>Adaptability:</strong></span> Quickly learn new tech and methods.</li>
+                <li><span class="soft-skill-text"><strong>Ethics & Integrity</strong></span></li>
+                <li><span class="soft-skill-text"><strong>Problem Solving & Analytical Thinking</strong></span></li>
+                <li><span class="soft-skill-text"><strong>Communication (Written & Verbal)</strong></span></li>
+                <li><span class="soft-skill-text"><strong>Continuous Learning & Curiosity</strong></span></li>
+                <li><span class="soft-skill-text"><strong>Attention to Detail</strong></span></li>
+                <li><span class="soft-skill-text"><strong>Patience & Persistence</strong></span></li>
+                <li><span class="soft-skill-text"><strong>Teamwork & Collaboration</strong></span></li>
+                <li><span class="soft-skill-text"><strong>Adaptability & Creativity</strong></span></li>
             </ul>
         </section>
-
         <section class="content-section" id="learning-resources">
             <h3>Recommended Learning Resources</h3>
             <ul>
-                <li><span class="resource-text"><strong>Platforms:</strong> TryHackMe, Hack The Box, PortSwigger Web Security Academy, PentesterLab.</span></li>
-                <li><span class="resource-text"><strong>Books:</strong> "Hacking: The Art of Exploitation", "Web App Hacker's Handbook".</span></li>
-                <li><span class="resource-text"><strong>CTFs:</strong> Participate via CTFTime.org.</span></li>
-                <li><span class="resource-text"><strong>Labs:</strong> Build a home lab (VirtualBox, VMware).</span></li>
-                <li><span class="resource-text"><strong>Community:</strong> Blogs, forums (r/netsec), Discord servers.</span></li>
-                <li><span class="resource-text"><strong>Events:</strong> Conferences (Black Hat, DEF CON) & local meetups.</span></li>
-                <li><span class="resource-text"><strong>Open Source:</strong> Study/contribute to tools (Metasploit, Nmap).</span></li>
+                <li><span class="resource-text"><strong>Platforms:</strong> TryHackMe, Hack The Box, PortSwigger Web Security Academy, PentesterLab, Offensive Security Proving Grounds.</span></li>
+                <li><span class="resource-text"><strong>Books:</strong> "Hacking: The Art of Exploitation", "Web App Hacker's Handbook", "Penetration Testing: A Hands-On Introduction".</span></li>
+                <li><span class="resource-text"><strong>CTFs:</strong> CTFTime.org, OverTheWire, PicoCTF.</span></li>
+                <li><span class="resource-text"><strong>Home Lab:</strong> VirtualBox/VMware with vulnerable VMs (Metasploitable, VulnHub).</span></li>
+                <li><span class="resource-text"><strong>Community:</strong> Reddit (r/netsec, r/hacking), Twitter (InfoSec), Discord Servers, The Hacker News.</span></li>
+                <li><span class="resource-text"><strong>Events:</strong> DEF CON, Black Hat, Local BSides.</span></li>
             </ul>
         </section>
+
+
     </div>
 
     <script>
-        // Global variables for theme handling (dark mode toggle)
         const darkModeToggle = document.getElementById('darkModeToggle');
         const modeIcon = document.getElementById('modeIcon');
         const getCssVar = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
@@ -294,319 +246,410 @@
                 modeIcon.classList.remove('fa-sun'); modeIcon.classList.add('fa-moon');
                 localStorage.setItem('theme', 'light');
             }
-            // The new graph script sets its own background color directly.
-            // If other elements need color updates based on theme, add them here.
             const graphContainer = document.getElementById('visNetwork');
             if (graphContainer) {
-                graphContainer.style.border = `2px solid ${getCssVar('--border-glass-current')}`;
+                graphContainer.style.border = `1px solid ${getCssVar('--border-glass-current')}`;
             }
         }
-
         const savedTheme = localStorage.getItem('theme');
         if (savedTheme === 'dark') { darkModeToggle.checked = true; }
         applyTheme(); 
         darkModeToggle.addEventListener('change', applyTheme);
 
-        // Accordion functionality
         document.addEventListener('DOMContentLoaded', () => {
             const accordions = document.querySelectorAll('.accordion-item');
             accordions.forEach(accordion => {
                 const header = accordion.querySelector('.accordion-header');
                 header.addEventListener('click', () => {
-                    accordion.classList.toggle('active');
-                    const content = accordion.querySelector('.accordion-content');
-                    if (accordion.classList.contains('active')) {
+                    const isActive = accordion.classList.contains('active');
+                    accordions.forEach(acc => {
+                         if (acc !== accordion) {
+                            acc.classList.remove('active');
+                            acc.querySelector('.accordion-content').style.maxHeight = 0;
+                         }
+                    });
+                    if (!isActive) {
+                        accordion.classList.add('active');
+                        const content = accordion.querySelector('.accordion-content');
                         content.style.maxHeight = content.scrollHeight + "px";
                     } else {
+                        accordion.classList.remove('active');
+                        const content = accordion.querySelector('.accordion-content');
                         content.style.maxHeight = 0;
                     }
                 });
             });
 
-            // Function to attempt graph initialization
             function attemptInitGraph(retries = 5, delay = 300) {
-                const graphContainer = document.getElementById('visNetwork'); // Corrected target ID
+                const graphContainer = document.getElementById('visNetwork');
                 const loadingMessageElement = graphContainer.querySelector('.loading-message');
-                let allLibsLoaded = true; let missingLibs = [];
-
-                if (typeof THREE === 'undefined') { allLibsLoaded = false; missingLibs.push('THREE.js'); }
-                if (typeof ForceGraph3D === 'undefined') { allLibsLoaded = false; missingLibs.push('ForceGraph3D'); }
-                
-                if (allLibsLoaded) {
+                if (typeof THREE !== 'undefined' && typeof ForceGraph3D !== 'undefined') {
                     if (loadingMessageElement) loadingMessageElement.textContent = "Libraries loaded. Initializing 3D Graph...";
-                    console.log("All required libraries loaded. Initializing graph...");
-                    console.log("Three.js version detected:", (typeof THREE !== 'undefined' ? THREE.REVISION : 'N/A'));
-                    initNewGraph(); // Call the new graph initialization function
+                    initNewGraph();
                 } else {
-                    console.warn(`Libs not yet available. Missing: ${missingLibs.join(', ')}. Retrying (${retries} left)...`);
-                    if (loadingMessageElement) {
-                         loadingMessageElement.innerHTML = `Waiting for 3D Graph Libraries... <br>Missing: ${missingLibs.join(', ')}. Retrying... (${retries} left) <br>If this persists, ensure your browser can load scripts from CDNs.`;
-                    }
+                    if (loadingMessageElement) loadingMessageElement.innerHTML = `Waiting for 3D Graph Libraries... Retrying... (${retries} left)`;
                     if (retries > 0) { setTimeout(() => attemptInitGraph(retries - 1, delay), delay); }
-                    else {
-                        console.error("Failed to detect 3D graph libraries. Check Network/Console tabs for script load errors or earlier JS errors.");
-                        if (loadingMessageElement) {
-                            loadingMessageElement.innerHTML = "Error: Failed to load 3D graph components. <br>Please check your browser's <b>Network tab</b> for failed script loads and the <b>Console tab</b> for other errors, then refresh.";
-                            loadingMessageElement.style.color = "red";
-                        }
+                    else if (loadingMessageElement) {
+                        loadingMessageElement.innerHTML = "Error: Failed to load 3D graph components. Refresh or check console.";
+                        loadingMessageElement.style.color = "red";
                     }
                 }
             }
             attemptInitGraph();
         });
 
-        // ===================================================================================
-        // == START OF REPLACED GRAPH SCRIPT (FROM YOUR NEW EXAMPLE) ==
-        // ===================================================================================
+        // --- Constants for Graph Visuals ---
+        const DEFAULT_NODE_OPACITY = 0.85;
+        const SELECTED_NODE_OPACITY = 1.0;
+        const DIMMED_NODE_OPACITY = 0.1;
+        const DEFAULT_LABEL_OPACITY = 0.7;
+        const SELECTED_LABEL_OPACITY = 0.9;
+        const DIMMED_LABEL_OPACITY = 0.08;
+        const DEFAULT_LINK_OPACITY = 0.2;
+        const SELECTED_LINK_OPACITY = 0.6;
+        const DIMMED_LINK_OPACITY = 0.03;
+
+        let Graph; // To store ForceGraph3D instance
+        let currentSelectedNodeData = null;
+        let highlightedNodesSet = new Set();
+        let highlightedLinksSet = new Set();
+
         function initNewGraph() {
-            const graphContainer = document.getElementById('visNetwork'); // Target the existing container
+            const graphContainer = document.getElementById('visNetwork');
             const loadingMessageElement = graphContainer.querySelector('.loading-message');
             if (loadingMessageElement) loadingMessageElement.style.display = 'none';
 
-
-            // Utility for drawing rounded rectangle on canvas
             CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
-                if (w < 2 * r) r = w / 2;
-                if (h < 2 * r) r = h / 2;
-                this.beginPath();
-                this.moveTo(x + r, y);
-                this.arcTo(x + w, y, x + w, y + h, r);
-                this.arcTo(x + w, y + h, x, y + h, r);
-                this.arcTo(x, y + h, x, y, r);
-                this.arcTo(x, y, x + w, y, r);
-                this.closePath();
-                return this;
-            };
-
-            // Data with colors, shapes and sizes (FROM YOUR NEW EXAMPLE)
-            const data = {
-                nodes: [
-                    { id: 'Reconnaissance', color: '#FF6F61', shape: 'sphere', size: 9 },
-                    { id: 'Footprinting', color: '#FF9A8D', shape: 'cube', size: 6 },
-                    { id: 'WHOIS Information', color: '#FF9A8D', shape: 'cube', size: 6 },
-                    { id: 'DNS Enumeration', color: '#FF9A8D', shape: 'cube', size: 6 },
-
-                    { id: 'Scanning', color: '#61A0FF', shape: 'cone', size: 9 },
-                    { id: 'Network Scanning', color: '#8AB8FF', shape: 'sphere', size: 5 },
-                    { id: 'Port Scanning', color: '#8AB8FF', shape: 'sphere', size: 5 },
-                    { id: 'Vulnerability Scanning', color: '#8AB8FF', shape: 'sphere', size: 5 },
-
-                    { id: 'Exploitation', color: '#6BFF96', shape: 'sphere', size: 9 },
-                    { id: 'System Hacking', color: '#9EFFB7', shape: 'cube', size: 6 },
-                    { id: 'Password Cracking', color: '#9EFFB7', shape: 'cube', size: 6 },
-                    { id: 'Privilege Escalation', color: '#9EFFB7', shape: 'cube', size: 6 },
-
-                    { id: 'Post-Exploitation', color: '#FFE66B', shape: 'cone', size: 9 },
-                    { id: 'Maintaining Access', color: '#FFF299', shape: 'sphere', size: 5 },
-                    { id: 'Clearing Logs', color: '#FFF299', shape: 'sphere', size: 5 },
-                    { id: 'Data Exfiltration', color: '#FFF299', shape: 'sphere', size: 5 },
-
-                    { id: 'Defense Evasion', color: '#FF61B6', shape: 'sphere', size: 9 },
-                    { id: 'Evading IDS/Firewalls', color: '#FF8FD1', shape: 'cube', size: 6 },
-                    { id: 'Tunneling', color: '#FF8FD1', shape: 'cube', size: 6 },
-                    { id: 'Rootkits', color: '#FF8FD1', shape: 'cube', size: 6 },
-
-                    { id: 'Web Hacking', color: '#4B6AFF', shape: 'cone', size: 9 },
-                    { id: 'SQL Injection', color: '#7A9BFF', shape: 'sphere', size: 5 },
-                    { id: 'Cross-Site Scripting (XSS)', color: '#7A9BFF', shape: 'sphere', size: 5 },
-                    { id: 'Cross-Site Request Forgery (CSRF)', color: '#7A9BFF', shape: 'sphere', size: 5 },
-
-                    { id: 'Cryptography', color: '#A661FF', shape: 'sphere', size: 9 },
-                    { id: 'Hashing', color: '#C19BFF', shape: 'cube', size: 6 },
-                    { id: 'Encryption', color: '#C19BFF', shape: 'cube', size: 6 },
-                    { id: 'Digital Signatures', color: '#C19BFF', shape: 'cube', size: 6 },
-
-                    { id: 'Social Engineering', color: '#FFB661', shape: 'sphere', size: 9 },
-                    { id: 'Phishing', color: '#FFD199', shape: 'cone', size: 5 },
-                    { id: 'Pretexting', color: '#FFD199', shape: 'cone', size: 5 },
-                    { id: 'Baiting', color: '#FFD199', shape: 'cone', size: 5 },
-                ],
-                links: [
-                    { source: 'Reconnaissance', target: 'Footprinting' },
-                    { source: 'Reconnaissance', target: 'WHOIS Information' },
-                    { source: 'Reconnaissance', target: 'DNS Enumeration' },
-
-                    { source: 'Scanning', target: 'Network Scanning' },
-                    { source: 'Scanning', target: 'Port Scanning' },
-                    { source: 'Scanning', target: 'Vulnerability Scanning' },
-
-                    { source: 'Exploitation', target: 'System Hacking' },
-                    { source: 'Exploitation', target: 'Password Cracking' },
-                    { source: 'Exploitation', target: 'Privilege Escalation' },
-
-                    { source: 'Post-Exploitation', target: 'Maintaining Access' },
-                    { source: 'Post-Exploitation', target: 'Clearing Logs' },
-                    { source: 'Post-Exploitation', target: 'Data Exfiltration' },
-
-                    { source: 'Defense Evasion', target: 'Evading IDS/Firewalls' },
-                    { source: 'Defense Evasion', target: 'Tunneling' },
-                    { source: 'Defense Evasion', target: 'Rootkits' },
-
-                    { source: 'Web Hacking', target: 'SQL Injection' },
-                    { source: 'Web Hacking', target: 'Cross-Site Scripting (XSS)' },
-                    { source: 'Web Hacking', target: 'Cross-Site Request Forgery (CSRF)' },
-
-                    { source: 'Cryptography', target: 'Hashing' },
-                    { source: 'Cryptography', target: 'Encryption' },
-                    { source: 'Cryptography', target: 'Digital Signatures' },
-
-                    { source: 'Social Engineering', target: 'Phishing' },
-                    { source: 'Social Engineering', target: 'Pretexting' },
-                    { source: 'Social Engineering', target: 'Baiting' },
-
-                    { source: 'Reconnaissance', target: 'Scanning' },
-                    { source: 'Scanning', target: 'Exploitation' },
-                    { source: 'Exploitation', target: 'Post-Exploitation' },
-                    { source: 'Post-Exploitation', target: 'Defense Evasion' },
-                    { source: 'Defense Evasion', target: 'Web Hacking' },
-                    { source: 'Web Hacking', target: 'Cryptography' },
-                    { source: 'Social Engineering', target: 'Reconnaissance' },
-                ]
+                if (w < 2 * r) r = w / 2; if (h < 2 * r) r = h / 2;
+                this.beginPath(); this.moveTo(x + r, y);
+                this.arcTo(x + w, y, x + w, y + h, r); this.arcTo(x + w, y + h, x, y + h, r);
+                this.arcTo(x, y + h, x, y, r); this.arcTo(x, y, x + w, y, r);
+                this.closePath(); return this;
             };
             
-            // Data Validation (keeping this crucial check)
-            const nodeIds = new Set(data.nodes.map(n => n.id));
-            let missingSourceOrTarget = false;
-            data.links.forEach((link, index) => {
-                if (!nodeIds.has(link.source)) {
-                    console.error(`Link index ${index} (source: "${link.source}", target: "${link.target}") references MISSING SOURCE node ID: "${link.source}"`);
-                    missingSourceOrTarget = true;
-                }
-                if (!nodeIds.has(link.target)) {
-                    console.error(`Link index ${index} (source: "${link.source}", target: "${link.target}") references MISSING TARGET node ID: "${link.target}"`);
-                    missingSourceOrTarget = true;
-                }
-            });
+            // Softer Color Palette
+            const nodeColors = {
+                Fundamentals: '#A0D2DB', Reconnaissance: '#FEC89A', Scanning: '#A2D2FF',
+                Exploitation: '#A9DFBF', 'Web Hacking': '#C7CEEA', 'Post-Exploitation': '#FFEE93',
+                'Defense Evasion': '#F9A8D4', Cryptography: '#D4A0F9', 'Social Engineering': '#FFB347',
+                Tools: '#B2BABB', Certifications: '#E0BBE4', 'Cloud Security': '#87CEEB',
+                'Mobile Security': '#98FB98'
+            };
 
-            if (missingSourceOrTarget) {
-                console.error("CRITICAL: Graph data is invalid. Fix data and refresh.");
-                if (loadingMessageElement) {
-                    loadingMessageElement.innerHTML = `Error: Graph data is invalid. Some links reference non-existent nodes. <br>Please check the browser console for details. <br>Graph cannot be displayed.`;
-                    loadingMessageElement.style.color = "red";
-                    loadingMessageElement.style.display = "block";
-                }
-                return;
-            } else {
-                console.log("Graph data integrity check: All link sources/targets valid.");
-            }
+            const data = { // Same robust data from previous step
+                nodes: [
+                    // Fundamentals
+                    { id: 'Fundamentals', name: 'Fundamentals', group: 'Fundamentals', color: nodeColors.Fundamentals, shape: 'capsule', size: 10 },
+                    { id: 'Networking', name: 'Networking (TCP/IP, DNS, HTTP)', group: 'Fundamentals', color: nodeColors.Fundamentals, shape: 'capsule', size: 7 },
+                    { id: 'Linux CLI', name: 'Linux CLI & Admin', group: 'Fundamentals', color: nodeColors.Fundamentals, shape: 'capsule', size: 7 },
+                    { id: 'Python Scripting', name: 'Python Scripting', group: 'Fundamentals', color: nodeColors.Fundamentals, shape: 'capsule', size: 7 },
+                    { id: 'Virtualization', name: 'Virtualization (VMware/VBox)', group: 'Fundamentals', color: nodeColors.Fundamentals, shape: 'capsule', size: 6 },
+                    { id: 'Security Concepts', name: 'Basic Security Concepts', group: 'Fundamentals', color: nodeColors.Fundamentals, shape: 'capsule', size: 6 },
+                    { id: 'Wireshark', name: 'Wireshark', group: 'Tools', color: nodeColors.Tools, shape: 'cylinder', size: 4 },
+                    { id: 'Reconnaissance', name: 'Reconnaissance', group: 'Reconnaissance', color: nodeColors.Reconnaissance, shape: 'sphere', size: 9 },
+                    { id: 'OSINT', name: 'OSINT', group: 'Reconnaissance', color: nodeColors.Reconnaissance, shape: 'cube', size: 6 },
+                    { id: 'Google Dorking', name: 'Google Dorking', group: 'Reconnaissance', color: nodeColors.Reconnaissance, shape: 'cube', size: 5 },
+                    { id: 'WHOIS', name: 'WHOIS Info', group: 'Reconnaissance', color: nodeColors.Reconnaissance, shape: 'cube', size: 5 },
+                    { id: 'DNS Enum', name: 'DNS Enumeration', group: 'Reconnaissance', color: nodeColors.Reconnaissance, shape: 'cube', size: 6 },
+                    { id: 'Subdomain Enum', name: 'Subdomain Enumeration', group: 'Reconnaissance', color: nodeColors.Reconnaissance, shape: 'cube', size: 6 },
+                    { id: 'Shodan', name: 'Shodan', group: 'Tools', color: nodeColors.Tools, shape: 'cylinder', size: 4 },
+                    { id: 'Scanning', name: 'Scanning & Enumeration', group: 'Scanning', color: nodeColors.Scanning, shape: 'cone', size: 9 },
+                    { id: 'Network Scanning', name: 'Network Scanning', group: 'Scanning', color: nodeColors.Scanning, shape: 'sphere', size: 6 },
+                    { id: 'Port Scanning', name: 'Port Scanning', group: 'Scanning', color: nodeColors.Scanning, shape: 'sphere', size: 6 },
+                    { id: 'Vuln Scanning', name: 'Vulnerability Scanning', group: 'Scanning', color: nodeColors.Scanning, shape: 'sphere', size: 6 },
+                    { id: 'Service Enum', name: 'Service Enumeration', group: 'Scanning', color: nodeColors.Scanning, shape: 'sphere', size: 5 },
+                    { id: 'Nmap', name: 'Nmap', group: 'Tools', color: nodeColors.Tools, shape: 'cylinder', size: 5 },
+                    { id: 'Nessus/OpenVAS', name: 'Nessus / OpenVAS', group: 'Tools', color: nodeColors.Tools, shape: 'cylinder', size: 4 },
+                    { id: 'Exploitation', name: 'Exploitation', group: 'Exploitation', color: nodeColors.Exploitation, shape: 'sphere', size: 10 },
+                    { id: 'System Hacking', name: 'System Hacking', group: 'Exploitation', color: nodeColors.Exploitation, shape: 'cube', size: 7 },
+                    { id: 'Linux Exploits', name: 'Linux Exploits', group: 'Exploitation', color: nodeColors.Exploitation, shape: 'cube', size: 5 },
+                    { id: 'Windows Exploits', name: 'Windows Exploits', group: 'Exploitation', color: nodeColors.Exploitation, shape: 'cube', size: 5 },
+                    { id: 'Password Cracking', name: 'Password Cracking', group: 'Exploitation', color: nodeColors.Exploitation, shape: 'cube', size: 6 },
+                    { id: 'Privilege Escalation', name: 'Privilege Escalation', group: 'Exploitation', color: nodeColors.Exploitation, shape: 'cube', size: 7 },
+                    { id: 'Metasploit', name: 'Metasploit Framework', group: 'Tools', color: nodeColors.Tools, shape: 'cylinder', size: 5 },
+                    { id: 'Hashcat/John', name: 'Hashcat / JTR', group: 'Tools', color: nodeColors.Tools, shape: 'cylinder', size: 4 },
+                    { id: 'Web Hacking', name: 'Web Hacking', group: 'Web Hacking', color: nodeColors['Web Hacking'], shape: 'cone', size: 9 },
+                    { id: 'OWASP Top 10', name: 'OWASP Top 10', group: 'Web Hacking', color: nodeColors['Web Hacking'], shape: 'sphere', size: 7 },
+                    { id: 'SQL Injection', name: 'SQL Injection', group: 'Web Hacking', color: nodeColors['Web Hacking'], shape: 'sphere', size: 6 },
+                    { id: 'XSS', name: 'XSS', group: 'Web Hacking', color: nodeColors['Web Hacking'], shape: 'sphere', size: 6 },
+                    { id: 'CSRF', name: 'CSRF', group: 'Web Hacking', color: nodeColors['Web Hacking'], shape: 'sphere', size: 5 },
+                    { id: 'SSRF', name: 'SSRF', group: 'Web Hacking', color: nodeColors['Web Hacking'], shape: 'sphere', size: 5 },
+                    { id: 'LFI/RFI', name: 'File Inclusion', group: 'Web Hacking', color: nodeColors['Web Hacking'], shape: 'sphere', size: 5 },
+                    { id: 'API Security', name: 'API Security', group: 'Web Hacking', color: nodeColors['Web Hacking'], shape: 'sphere', size: 6 },
+                    { id: 'Burp Suite', name: 'Burp Suite / ZAP', group: 'Tools', color: nodeColors.Tools, shape: 'cylinder', size: 5 },
+                    { id: 'SQLMap', name: 'SQLMap', group: 'Tools', color: nodeColors.Tools, shape: 'cylinder', size: 4 },
+                    { id: 'Post-Exploitation', name: 'Post-Exploitation', group: 'Post-Exploitation', color: nodeColors['Post-Exploitation'], shape: 'cone', size: 9 },
+                    { id: 'Maintaining Access', name: 'Maintaining Access', group: 'Post-Exploitation', color: nodeColors['Post-Exploitation'], shape: 'sphere', size: 6 },
+                    { id: 'Lateral Movement', name: 'Lateral Movement', group: 'Post-Exploitation', color: nodeColors['Post-Exploitation'], shape: 'sphere', size: 6 },
+                    { id: 'Pivoting', name: 'Pivoting', group: 'Post-Exploitation', color: nodeColors['Post-Exploitation'], shape: 'sphere', size: 5 },
+                    { id: 'Data Exfil', name: 'Data Exfiltration', group: 'Post-Exploitation', color: nodeColors['Post-Exploitation'], shape: 'sphere', size: 5 },
+                    { id: 'Clearing Logs', name: 'Clearing Logs', group: 'Post-Exploitation', color: nodeColors['Post-Exploitation'], shape: 'sphere', size: 5 },
+                    { id: 'Defense Evasion', name: 'Defense Evasion', group: 'Defense Evasion', color: nodeColors['Defense Evasion'], shape: 'sphere', size: 8 },
+                    { id: 'AV Evasion', name: 'AV Evasion', group: 'Defense Evasion', color: nodeColors['Defense Evasion'], shape: 'cube', size: 6 },
+                    { id: 'Firewall/IDS Evasion', name: 'Firewall/IDS Evasion', group: 'Defense Evasion', color: nodeColors['Defense Evasion'], shape: 'cube', size: 6 },
+                    { id: 'Cryptography', name: 'Cryptography', group: 'Cryptography', color: nodeColors.Cryptography, shape: 'sphere', size: 8 },
+                    { id: 'Hashing Algos', name: 'Hashing Algorithms', group: 'Cryptography', color: nodeColors.Cryptography, shape: 'cube', size: 5 },
+                    { id: 'Encryption Algos', name: 'Encryption Algorithms', group: 'Cryptography', color: nodeColors.Cryptography, shape: 'cube', size: 5 },
+                    { id: 'Social Engineering', name: 'Social Engineering', group: 'Social Engineering', color: nodeColors['Social Engineering'], shape: 'sphere', size: 8 },
+                    { id: 'Phishing', name: 'Phishing', group: 'Social Engineering', color: nodeColors['Social Engineering'], shape: 'cone', size: 6 },
+                    { id: 'Exploit Development', name: 'Exploit Development', group: 'Exploitation', color: nodeColors.Exploitation, shape: 'dodecahedron', size: 7 },
+                    { id: 'Reverse Engineering', name: 'Reverse Engineering', group: 'Exploitation', color: nodeColors.Exploitation, shape: 'dodecahedron', size: 7 },
+                    { id: 'Ghidra/IDA', name: 'Ghidra / IDA Pro', group: 'Tools', color: nodeColors.Tools, shape: 'cylinder', size: 4 },
+                    { id: 'Malware Analysis', name: 'Malware Analysis', group: 'Exploitation', color: nodeColors.Exploitation, shape: 'dodecahedron', size: 7 },
+                    { id: 'AD Hacking', name: 'Active Directory Hacking', group: 'Exploitation', color: nodeColors.Exploitation, shape: 'dodecahedron', size: 7 },
+                    { id: 'Cloud Security', name: 'Cloud Security', group: 'Cloud Security', color: nodeColors['Cloud Security'], shape: 'dodecahedron', size: 8 },
+                    { id: 'Mobile Security', name: 'Mobile Security', group: 'Mobile Security', color: nodeColors['Mobile Security'], shape: 'dodecahedron', size: 8 },
+                    { id: 'Certifications', name: 'Certifications', group: 'Certifications', color: nodeColors.Certifications, shape: 'capsule', size: 10 },
+                    { id: 'CompTIA Sec+', name: 'CompTIA Security+', group: 'Certifications', color: nodeColors.Certifications, shape: 'capsule', size: 6 },
+                    { id: 'CEH', name: 'EC-Council CEH', group: 'Certifications', color: nodeColors.Certifications, shape: 'capsule', size: 6 },
+                    { id: 'OSCP', name: 'Offensive Security OSCP', group: 'Certifications', color: nodeColors.Certifications, shape: 'capsule', size: 7 },
+                    { id: 'CISSP', name: '(ISC)² CISSP', group: 'Certifications', color: nodeColors.Certifications, shape: 'capsule', size: 7 },
+                ],
+                links: [ /* Same links as previous version */
+                    { source: 'Fundamentals', target: 'Networking' }, { source: 'Fundamentals', target: 'Linux CLI' },
+                    { source: 'Fundamentals', target: 'Python Scripting' }, { source: 'Fundamentals', target: 'Virtualization' },
+                    { source: 'Fundamentals', target: 'Security Concepts' },
+                    { source: 'Networking', target: 'Wireshark' }, { source: 'Networking', target: 'Reconnaissance' },
+                    { source: 'Linux CLI', target: 'Python Scripting' }, { source: 'Linux CLI', target: 'Scanning' },
+                    { source: 'Python Scripting', target: 'Exploitation' }, { source: 'Python Scripting', target: 'Web Hacking' },
+                    { source: 'Security Concepts', target: 'Certifications'},
+                    { source: 'Reconnaissance', target: 'OSINT' }, { source: 'Reconnaissance', target: 'Google Dorking' },
+                    { source: 'Reconnaissance', target: 'WHOIS' }, { source: 'Reconnaissance', target: 'DNS Enum' },
+                    { source: 'Reconnaissance', target: 'Subdomain Enum'}, { source: 'Reconnaissance', target: 'Shodan'},
+                    { source: 'Reconnaissance', target: 'Scanning' },
+                    { source: 'Scanning', target: 'Network Scanning' }, { source: 'Scanning', target: 'Port Scanning' },
+                    { source: 'Scanning', target: 'Vuln Scanning' }, { source: 'Scanning', target: 'Service Enum'},
+                    { source: 'Network Scanning', target: 'Nmap' }, { source: 'Vuln Scanning', target: 'Nessus/OpenVAS' },
+                    { source: 'Scanning', target: 'Exploitation' }, { source: 'Scanning', target: 'Web Hacking' },
+                    { source: 'Exploitation', target: 'System Hacking' }, { source: 'System Hacking', target: 'Linux Exploits' },
+                    { source: 'System Hacking', target: 'Windows Exploits' },
+                    { source: 'Exploitation', target: 'Password Cracking' }, { source: 'Password Cracking', target: 'Hashcat/John' },
+                    { source: 'Exploitation', target: 'Privilege Escalation' },
+                    { source: 'Exploitation', target: 'Metasploit' },
+                    { source: 'Exploitation', target: 'Post-Exploitation' },
+                    { source: 'Exploitation', target: 'Exploit Development' }, { source: 'Exploitation', target: 'AD Hacking'},
+                    { source: 'Web Hacking', target: 'OWASP Top 10' }, { source: 'OWASP Top 10', target: 'SQL Injection' },
+                    { source: 'OWASP Top 10', target: 'XSS' }, { source: 'OWASP Top 10', target: 'CSRF' },
+                    { source: 'Web Hacking', target: 'SSRF' }, { source: 'Web Hacking', target: 'LFI/RFI' },
+                    { source: 'Web Hacking', target: 'API Security' },
+                    { source: 'Web Hacking', target: 'Burp Suite' }, { source: 'SQL Injection', target: 'SQLMap' },
+                    { source: 'Web Hacking', target: 'Exploitation' },
+                    { source: 'Post-Exploitation', target: 'Maintaining Access' }, { source: 'Post-Exploitation', target: 'Lateral Movement' },
+                    { source: 'Post-Exploitation', target: 'Pivoting' }, { source: 'Post-Exploitation', target: 'Data Exfil' },
+                    { source: 'Post-Exploitation', target: 'Clearing Logs' }, { source: 'Post-Exploitation', target: 'Defense Evasion' },
+                    { source: 'Defense Evasion', target: 'AV Evasion' }, { source: 'Defense Evasion', target: 'Firewall/IDS Evasion' },
+                    { source: 'Cryptography', target: 'Hashing Algos' }, { source: 'Cryptography', target: 'Encryption Algos' },
+                    { source: 'Cryptography', target: 'Exploitation' }, 
+                    { source: 'Social Engineering', target: 'Phishing' }, { source: 'Social Engineering', target: 'Reconnaissance' },
+                    { source: 'Exploit Development', target: 'Reverse Engineering' }, { source: 'Reverse Engineering', target: 'Ghidra/IDA' },
+                    { source: 'Exploit Development', target: 'Malware Analysis' },
+                    { source: 'System Hacking', target: 'AD Hacking' },
+                    { source: 'Fundamentals', target: 'Cloud Security'}, { source: 'Fundamentals', target: 'Mobile Security'},
+                    { source: 'Cloud Security', target: 'Exploitation' }, { source: 'Mobile Security', target: 'Exploitation' },
+                    { source: 'Certifications', target: 'CompTIA Sec+' }, { source: 'Certifications', target: 'CEH' },
+                    { source: 'Certifications', target: 'OSCP' }, { source: 'Certifications', target: 'CISSP' },
+                    { source: 'Security Concepts', target: 'CompTIA Sec+'},
+                    { source: 'Scanning', target: 'CEH'}, { source: 'Exploitation', target: 'CEH'},
+                    { source: 'Exploit Development', target: 'OSCP'}, { source: 'AD Hacking', target: 'OSCP'},
+                    { source: 'Fundamentals', target: 'CISSP'}, { source: 'Security Concepts', target: 'CISSP'}
+                ]
+            };
+
+            // Add unique link IDs for easier management
+            data.links.forEach((link, i) => link.id = `link-${i}`);
 
 
-            // Create a text sprite with rounded background for each label
-            function createTextLabel(text) {
-                const fontSize = 30; 
-                const padding = 25;  
-
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-
-                ctx.font = `${fontSize}px Arial`;
-                const textWidth = ctx.measureText(text).width;
-                const width = textWidth + padding * 2;
-                const height = fontSize + padding * 2;
-
-                canvas.width = width * 2; 
-                canvas.height = height * 2;
+            function createTextLabel(text, nodeColor) {
+                const fontSize = 20; const padding = 10; // Smaller labels
+                const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d');
+                ctx.font = `600 ${fontSize}px Poppins, Arial, sans-serif`; // Slightly bolder
+                
+                const textMetrics = ctx.measureText(text);
+                const textWidth = textMetrics.width;
+                const width = textWidth + padding * 2; 
+                const height = fontSize + padding * 1.5; // Adjusted height for better padding
+                
+                canvas.width = width * 2; canvas.height = height * 2; // Higher res for crispness
                 ctx.scale(2, 2);
 
-                ctx.fillStyle = 'rgba(50, 50, 50, 0.85)';
-                ctx.roundRect(0, 0, width, height, 15);
+                // Label background - This remains the same, providing a contrasting backdrop
+                ctx.fillStyle = darkModeToggle.checked ? 'rgba(50, 55, 60, 0.7)' : 'rgba(250, 250, 255, 0.7)';
+                ctx.roundRect(0, 0, width, height, 8);
                 ctx.fill();
 
-                ctx.fillStyle = 'white';
-                ctx.textBaseline = 'top';
-                ctx.fillText(text, padding, padding);
+                // Label text color - Enhanced for visibility
+                // OLD: ctx.fillStyle = '#000000'; 
+                ctx.fillStyle = darkModeToggle.checked ? '#F0F0F0' : '#222222'; // <--- THIS IS THE UPDATED LINE
+                                                                           // #F0F0F0 is a very light grey (almost white)
+                                                                           // #222222 is a very dark grey (almost black)
+                
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(text, width / 2, height / 2);
 
                 const texture = new THREE.CanvasTexture(canvas);
-                texture.minFilter = THREE.LinearFilter; 
+                texture.minFilter = THREE.LinearFilter;
+                texture.needsUpdate = true;
 
-                const material = new THREE.SpriteMaterial({ map: texture, depthTest: false });
+                const material = new THREE.SpriteMaterial({ map: texture, depthTest:false, transparent: true, opacity: DEFAULT_LABEL_OPACITY });
                 const sprite = new THREE.Sprite(material);
-                sprite.scale.set(width / 8, height / 8, 1); 
+                sprite.name = 'labelSprite'; // For easier lookup
+                sprite.scale.set(width / 10, height / 10, 1); // Adjusted scale
                 return sprite;
             }
-
-            // Function to create custom shapes (sphere, cube, cone)
             function createNodeShape(node) {
-                let geometry;
-                const size = node.size || 5;
-
+                let geometry; const size = node.size || 5;
                 switch (node.shape) {
-                    case 'cube':
-                        geometry = new THREE.BoxGeometry(size, size, size);
-                        break;
-                    case 'cone':
-                        geometry = new THREE.ConeGeometry(size / 1.5, size * 2, 8);
-                        break;
-                    case 'sphere':
-                    default:
-                        geometry = new THREE.SphereGeometry(size);
-                        break;
+                    case 'cube': geometry = new THREE.BoxGeometry(size, size, size); break;
+                    case 'cone': geometry = new THREE.ConeGeometry(size / 1.5, size * 1.8, 16); break;
+                    case 'cylinder': geometry = new THREE.CylinderGeometry(size*0.7, size*0.7, size*1.5, 16); break;
+                    case 'capsule': geometry = new THREE.CapsuleGeometry(size*0.6, size*1.2, 8, 16); break;
+                    case 'dodecahedron': geometry = new THREE.DodecahedronGeometry(size*0.8, 0); break;
+                    default: geometry = new THREE.SphereGeometry(size, 24, 12); break; // Reduced segments slightly
                 }
-                const material = new THREE.MeshPhongMaterial({ color: node.color || '#ff6600', shininess: 60 });
-                return new THREE.Mesh(geometry, material);
+                const material = new THREE.MeshPhongMaterial({ 
+                    color: node.color || '#cccccc', 
+                    shininess: 30, 
+                    transparent: true, 
+                    opacity: DEFAULT_NODE_OPACITY 
+                });
+                const mesh = new THREE.Mesh(geometry, material);
+                // Store default color for reset
+                mesh.userData.defaultColor = new THREE.Color(node.color || '#cccccc'); 
+                return mesh;
             }
 
-            // Setup lighting (This needs to be done on the graph's internal scene)
-            // The new graph script handles its own scene, so we modify how lights are added.
-
-            try {
-                const Graph = ForceGraph3D()
-                    (graphContainer) // Use the existing container
-                    .graphData(data)
-                    .nodeThreeObject(node => {
-                        const obj = createNodeShape(node);
-                        const label = createTextLabel(node.id);
-                        label.position.set(0, (node.size || 5) + 5, 0); 
-                        obj.add(label);
-                        return obj;
-                    })
-                    .linkWidth(1)
-                    .linkColor(() => 'rgba(255,255,255,0.15)')
-                    .backgroundColor('#121212') // Explicitly set from new script
-                    .enableNodeDrag(true)
-                    .cooldownTicks(100)
-                    .onNodeClick(node => {
-                        // The new script has an alert, you might want to integrate this with your nodeInfoPanel later
-                        alert(`You clicked on: ${node.id}`);
-                        // Example: If you want to use your old nodeInfoPanel:
-                        // const nodeInfoPanel = document.getElementById('node-info-panel');
-                        // if (nodeInfoPanel) {
-                        //    nodeInfoPanel.innerHTML = `<h4>${node.id}</h4><p>Shape: ${node.shape}, Color: ${node.color}</p>`;
-                        //    nodeInfoPanel.style.display = 'block'; // Make it visible
-                        // }
-                    })
-                    .onBackgroundClick(() => {
-                        // Example: If you want to hide your old nodeInfoPanel:
-                        // const nodeInfoPanel = document.getElementById('node-info-panel');
-                        // if (nodeInfoPanel) nodeInfoPanel.style.display = 'none';
+            Graph = ForceGraph3D()
+                (graphContainer)
+                .graphData(data)
+                .nodeId('id')
+                // .nodeLabel('name') // We use custom labels, so this is less critical
+                .nodeThreeObject(node => {
+                    const obj = createNodeShape(node);
+                    const label = createTextLabel(node.name || node.id, node.color);
+                    const labelOffset = (node.shape === 'cone' ? (node.size * 0.9) : (node.size * 0.6)) + 3;
+                    label.position.set(0, labelOffset, 0);
+                    obj.add(label);
+                    node.__threeObj = obj; // Keep reference for updates
+                    return obj;
+                })
+                .linkWidth(0.7)
+                .linkColor(link => highlightedLinksSet.has(link.id) ? (darkModeToggle.checked ? '#ffa500' : '#ff8c00') : (darkModeToggle.checked ? 'rgba(180,180,180,0.1)' : 'rgba(100,100,100,0.15)'))
+                .linkMaterial(link => {
+                    const opacity = highlightedLinksSet.has(link.id) ? SELECTED_LINK_OPACITY : DIMMED_LINK_OPACITY;
+                     return new THREE.MeshBasicMaterial({ // Simpler material for links
+                        color: highlightedLinksSet.has(link.id) ? (darkModeToggle.checked ? '#ffa500' : '#ff8c00') : (darkModeToggle.checked ? 0xaaaaaa : 0x666666),
+                        transparent: true,
+                        opacity: currentSelectedNodeData ? opacity : DEFAULT_LINK_OPACITY // Use default if no selection
                     });
+                })
+                .linkDirectionalParticles(1)
+                .linkDirectionalParticleWidth(link => highlightedLinksSet.has(link.id) ? 1.2 : 0.5)
+                .linkDirectionalParticleColor(link => highlightedLinksSet.has(link.id) ? (darkModeToggle.checked ? '#FFD700' : '#FFA500') : (darkModeToggle.checked ? '#666666' : '#AAAAAA'))
+                .backgroundColor(darkModeToggle.checked ? getCssVar('--bg-dark') : getCssVar('--bg-light'))
+                .enableNodeDrag(false) // Nodes are not draggable
+                .cooldownTicks(250) // Let it settle
+                .onEngineStop(() => { // Fix nodes after layout
+                    Graph.graphData().nodes.forEach(node => {
+                        node.fx = node.x;
+                        node.fy = node.y;
+                        node.fz = node.z;
+                    });
+                    console.log("Engine stopped, nodes fixed.");
+                })
+                .onNodeClick(handleNodeClick)
+                .onBackgroundClick(resetSelectionAndCamera);
 
-                // Add lights to the graph's scene
-                const light = new THREE.DirectionalLight(0xffffff, 0.8);
-                light.position.set(50, 50, 100);
-                Graph.scene().add(light);
-                const ambientLight = new THREE.AmbientLight(0x404040, 0.7); // 0x404040 is a common grey
-                Graph.scene().add(ambientLight);
+            Graph.scene().add(new THREE.AmbientLight(darkModeToggle.checked ? 0x666666 : 0xaaaaaa, 0.8));
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.7);
+            directionalLight.position.set(60, 100, 150);
+            Graph.scene().add(directionalLight);
+            
+            Graph.cameraPosition({ z: 300 });
 
-                Graph.cameraPosition({ z: 100 }); // Initial camera position
+            darkModeToggle.addEventListener('change', () => {
+                 Graph.backgroundColor(darkModeToggle.checked ? getCssVar('--bg-dark') : getCssVar('--bg-light'));
+                 Graph.scene().children.find(c => c instanceof THREE.AmbientLight).color.setHex(darkModeToggle.checked ? 0x666666 : 0xaaaaaa);
+                 // Re-trigger visual update to apply new label/link colors if needed, or refresh materials
+                 updateNodeVisuals();
+            });
+        }
 
-                // Handle window resize for the new graph instance
-                window.addEventListener('resize', () => {
-                    Graph.width(graphContainer.clientWidth).height(graphContainer.clientHeight);
+        function handleNodeClick(node) {
+            if (currentSelectedNodeData && currentSelectedNodeData.id === node.id) {
+                // Clicked the same node again, reset
+                resetSelectionAndCamera();
+            } else {
+                currentSelectedNodeData = node;
+                highlightedNodesSet.clear();
+                highlightedLinksSet.clear();
+
+                highlightedNodesSet.add(node.id);
+                // Find direct children (nodes it links TO)
+                Graph.graphData().links.forEach(link => {
+                    if (link.source.id === node.id) {
+                        highlightedNodesSet.add(link.target.id);
+                        highlightedLinksSet.add(link.id);
+                    }
                 });
-
-            } catch (error) {
-                 console.error("Error during new ForceGraph3D initialization:", error);
-                if (loadingMessageElement) {
-                    loadingMessageElement.innerHTML = `Error initializing 3D graph. <br>Three.js Version: ${typeof THREE !== 'undefined' ? THREE.REVISION : 'N/A'}<br>Error: ${error.message} <br>Check console for stack trace.`;
-                    loadingMessageElement.style.color = "red";
-                    loadingMessageElement.style.display = "block";
-                }
+                updateNodeVisuals();
+                focusCameraOnNode(node);
             }
         }
-        // ===================================================================================
-        // == END OF REPLACED GRAPH SCRIPT ==
-        // ===================================================================================
+
+        function resetSelectionAndCamera() {
+            currentSelectedNodeData = null;
+            highlightedNodesSet.clear();
+            highlightedLinksSet.clear();
+            updateNodeVisuals();
+            Graph.cameraPosition({ x: 0, y: 0, z: 300 }, { x: 0, y: 0, z: 0 }, 1200); // Overview
+        }
+
+        function updateNodeVisuals() {
+            Graph.graphData().nodes.forEach(n => {
+                const obj = n.__threeObj;
+                if (!obj) return;
+                const material = obj.material;
+                const labelSprite = obj.children.find(child => child.name === 'labelSprite');
+
+                if (currentSelectedNodeData) { // A node is selected
+                    if (highlightedNodesSet.has(n.id)) {
+                        material.opacity = SELECTED_NODE_OPACITY;
+                        if(labelSprite) labelSprite.material.opacity = SELECTED_LABEL_OPACITY;
+                    } else {
+                        material.opacity = DIMMED_NODE_OPACITY;
+                        if(labelSprite) labelSprite.material.opacity = DIMMED_LABEL_OPACITY;
+                    }
+                } else { // No node selected, reset to defaults
+                    material.opacity = DEFAULT_NODE_OPACITY;
+                    if(labelSprite) labelSprite.material.opacity = DEFAULT_LABEL_OPACITY;
+                }
+            });
+            // Force graph to re-evaluate link materials/colors
+            Graph.linkMaterial(Graph.linkMaterial()) 
+                 .linkColor(Graph.linkColor())
+                 .linkDirectionalParticleColor(Graph.linkDirectionalParticleColor())
+                 .linkDirectionalParticleWidth(Graph.linkDirectionalParticleWidth());
+        }
+        
+        function focusCameraOnNode(node) {
+            if (node && node.__threeObj) {
+                const distRatio = 1 + Math.min(30, highlightedNodesSet.size * 2) / 100; // Adjust zoom based on subnode count
+                const distance = (node.size || 5) * 8 * distRatio + 60;
+                const nodePosition = node.__threeObj.position;
+                
+                const cameraTarget = new THREE.Vector3(nodePosition.x, nodePosition.y, nodePosition.z);
+                // Position camera slightly above and in front
+                const cameraPosition = new THREE.Vector3(
+                    nodePosition.x, 
+                    nodePosition.y + distance * 0.2, // Slightly above
+                    nodePosition.z + distance         // In front
+                );
+
+                Graph.cameraPosition(cameraPosition, cameraTarget, 1200);
+            }
+        }
+
     </script>
 </body>
 </html>
