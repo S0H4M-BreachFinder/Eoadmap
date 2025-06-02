@@ -80,15 +80,40 @@
         .accordion-header strong { font-size: 1.1em; color: var(--text-primary-current); }
         .accordion-icon { font-size: 1em; color: var(--accent-primary-current); transition: transform var(--transition-speed); }
         .accordion-item.active .accordion-icon { transform: rotate(45deg); }
-        .accordion-content { max-height: 242 px; overflow: hidden; padding: 0 20px; background-color: transparent; transition: max-height 0.5s ease-out, padding var(--transition-speed); }
+        .accordion-content { max-height: 0; overflow: hidden; padding: 0 20px; background-color: transparent; transition: max-height 0.5s ease-out, padding var(--transition-speed); }
         .accordion-item.active .accordion-content { max-height: 1500px; padding: 20px; }
         .accordion-content ul { list-style-position: inside; padding-left: 5px; }
         .accordion-content ul li { margin-bottom: 8px; }
         .loading-message { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 1.2em; color: var(--text-secondary-current); text-align: center; padding: 20px; }
+        
+        #graph-tooltip {
+            display: none;
+            position: absolute;
+            background: var(--bg-glass-current);
+            color: var(--text-primary-current);
+            padding: 10px 15px;
+            border-radius: var(--border-radius-small);
+            box-shadow: var(--shadow-current);
+            z-index: 1000;
+            pointer-events: none; /* Important so it doesn't interfere with graph events */
+            max-width: 320px;
+            font-size: 0.9em;
+            border: 1px solid var(--border-glass-current);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            line-height: 1.4;
+        }
+        #graph-tooltip strong {
+            color: var(--accent-primary-current);
+            display: block;
+            margin-bottom: 5px;
+        }
+
         @media (max-width: 768px) {
             .page-title { font-size: 2em; } .page-header { flex-direction: column; align-items: flex-start; gap: 15px; }
             .content-section { padding: 20px; } .legend ul { grid-template-columns: 1fr; } #visNetwork { height: 60vh; } 
             .accordion-header strong { font-size: 1em; }
+             #graph-tooltip { max-width: 250px; font-size: 0.8em; padding: 8px 12px; }
         }
     </style>
 </head>
@@ -104,7 +129,7 @@
         </header>
 
         <section class="content-section" id="roadmap-visualization">
-            <h3>Career Visualization (3D) - Click nodes to explore!</h3>
+            <h3>Career Visualization (3D) - Click nodes to explore, hover for info!</h3>
             <div id="visNetwork">
                 <div class="loading-message">Loading 3D Graph Libraries...</div>
             </div>
@@ -130,8 +155,6 @@
             </ul>
         </section>
 
-        <!-- Accordion sections (Learning Path, Certs, Soft Skills, Resources) remain the same as your previous version -->
-        <!-- ... (Paste your existing accordion HTML here for brevity) ... -->
          <section class="content-section" id="learning-path">
             <h3>Recommended Learning Path</h3>
             <div class="accordion">
@@ -227,9 +250,9 @@
                 <li><span class="resource-text"><strong>Events:</strong> DEF CON, Black Hat, Local BSides.</span></li>
             </ul>
         </section>
-
-
     </div>
+
+    <div id="graph-tooltip"></div>
 
     <script>
         const darkModeToggle = document.getElementById('darkModeToggle');
@@ -250,11 +273,31 @@
             if (graphContainer) {
                 graphContainer.style.border = `1px solid ${getCssVar('--border-glass-current')}`;
             }
+            // Update tooltip styles if it exists and is visible
+            const tooltip = document.getElementById('graph-tooltip');
+            if (tooltip) {
+                tooltip.style.background = getCssVar('--bg-glass-current');
+                tooltip.style.color = getCssVar('--text-primary-current');
+                tooltip.style.boxShadow = getCssVar('--shadow-current');
+                tooltip.style.border = `1px solid ${getCssVar('--border-glass-current')}`;
+                tooltip.querySelector('strong')?.style.setProperty('color', getCssVar('--accent-primary-current'), 'important');
+
+            }
         }
         const savedTheme = localStorage.getItem('theme');
         if (savedTheme === 'dark') { darkModeToggle.checked = true; }
         applyTheme(); 
         darkModeToggle.addEventListener('change', applyTheme);
+
+        // Tooltip related variables
+        const tooltipElement = document.getElementById('graph-tooltip');
+        let mouseX = 0;
+        let mouseY = 0;
+        document.addEventListener('mousemove', (event) => {
+            mouseX = event.clientX;
+            mouseY = event.clientY;
+        });
+
 
         document.addEventListener('DOMContentLoaded', () => {
             const accordions = document.querySelectorAll('.accordion-item');
@@ -262,12 +305,13 @@
                 const header = accordion.querySelector('.accordion-header');
                 header.addEventListener('click', () => {
                     const isActive = accordion.classList.contains('active');
-                    accordions.forEach(acc => {
-                         if (acc !== accordion) {
-                            acc.classList.remove('active');
-                            acc.querySelector('.accordion-content').style.maxHeight = 0;
-                         }
-                    });
+                    // Close other accordions if you want only one open at a time
+                    // accordions.forEach(acc => {
+                    //      if (acc !== accordion) {
+                    //         acc.classList.remove('active');
+                    //         acc.querySelector('.accordion-content').style.maxHeight = 0;
+                    //      }
+                    // });
                     if (!isActive) {
                         accordion.classList.add('active');
                         const content = accordion.querySelector('.accordion-content');
@@ -327,7 +371,6 @@
                 this.closePath(); return this;
             };
             
-            // Softer Color Palette
             const nodeColors = {
                 Fundamentals: '#A0D2DB', Reconnaissance: '#FEC89A', Scanning: '#A2D2FF',
                 Exploitation: '#A9DFBF', 'Web Hacking': '#C7CEEA', 'Post-Exploitation': '#FFEE93',
@@ -336,74 +379,74 @@
                 'Mobile Security': '#98FB98'
             };
 
-            const data = { // Same robust data from previous step
+            const data = {
                 nodes: [
                     // Fundamentals
-                    { id: 'Fundamentals', name: 'Fundamentals', group: 'Fundamentals', color: nodeColors.Fundamentals, shape: 'capsule', size: 10 },
-                    { id: 'Networking', name: 'Networking (TCP/IP, DNS, HTTP)', group: 'Fundamentals', color: nodeColors.Fundamentals, shape: 'capsule', size: 7 },
-                    { id: 'Linux CLI', name: 'Linux CLI & Admin', group: 'Fundamentals', color: nodeColors.Fundamentals, shape: 'capsule', size: 7 },
-                    { id: 'Python Scripting', name: 'Python Scripting', group: 'Fundamentals', color: nodeColors.Fundamentals, shape: 'capsule', size: 7 },
-                    { id: 'Virtualization', name: 'Virtualization (VMware/VBox)', group: 'Fundamentals', color: nodeColors.Fundamentals, shape: 'capsule', size: 6 },
-                    { id: 'Security Concepts', name: 'Basic Security Concepts', group: 'Fundamentals', color: nodeColors.Fundamentals, shape: 'capsule', size: 6 },
-                    { id: 'Wireshark', name: 'Wireshark', group: 'Tools', color: nodeColors.Tools, shape: 'cylinder', size: 4 },
-                    { id: 'Reconnaissance', name: 'Reconnaissance', group: 'Reconnaissance', color: nodeColors.Reconnaissance, shape: 'sphere', size: 9 },
-                    { id: 'OSINT', name: 'OSINT', group: 'Reconnaissance', color: nodeColors.Reconnaissance, shape: 'cube', size: 6 },
-                    { id: 'Google Dorking', name: 'Google Dorking', group: 'Reconnaissance', color: nodeColors.Reconnaissance, shape: 'cube', size: 5 },
-                    { id: 'WHOIS', name: 'WHOIS Info', group: 'Reconnaissance', color: nodeColors.Reconnaissance, shape: 'cube', size: 5 },
-                    { id: 'DNS Enum', name: 'DNS Enumeration', group: 'Reconnaissance', color: nodeColors.Reconnaissance, shape: 'cube', size: 6 },
-                    { id: 'Subdomain Enum', name: 'Subdomain Enumeration', group: 'Reconnaissance', color: nodeColors.Reconnaissance, shape: 'cube', size: 6 },
-                    { id: 'Shodan', name: 'Shodan', group: 'Tools', color: nodeColors.Tools, shape: 'cylinder', size: 4 },
-                    { id: 'Scanning', name: 'Scanning & Enumeration', group: 'Scanning', color: nodeColors.Scanning, shape: 'cone', size: 9 },
-                    { id: 'Network Scanning', name: 'Network Scanning', group: 'Scanning', color: nodeColors.Scanning, shape: 'sphere', size: 6 },
-                    { id: 'Port Scanning', name: 'Port Scanning', group: 'Scanning', color: nodeColors.Scanning, shape: 'sphere', size: 6 },
-                    { id: 'Vuln Scanning', name: 'Vulnerability Scanning', group: 'Scanning', color: nodeColors.Scanning, shape: 'sphere', size: 6 },
-                    { id: 'Service Enum', name: 'Service Enumeration', group: 'Scanning', color: nodeColors.Scanning, shape: 'sphere', size: 5 },
-                    { id: 'Nmap', name: 'Nmap', group: 'Tools', color: nodeColors.Tools, shape: 'cylinder', size: 5 },
-                    { id: 'Nessus/OpenVAS', name: 'Nessus / OpenVAS', group: 'Tools', color: nodeColors.Tools, shape: 'cylinder', size: 4 },
-                    { id: 'Exploitation', name: 'Exploitation', group: 'Exploitation', color: nodeColors.Exploitation, shape: 'sphere', size: 10 },
-                    { id: 'System Hacking', name: 'System Hacking', group: 'Exploitation', color: nodeColors.Exploitation, shape: 'cube', size: 7 },
-                    { id: 'Linux Exploits', name: 'Linux Exploits', group: 'Exploitation', color: nodeColors.Exploitation, shape: 'cube', size: 5 },
-                    { id: 'Windows Exploits', name: 'Windows Exploits', group: 'Exploitation', color: nodeColors.Exploitation, shape: 'cube', size: 5 },
-                    { id: 'Password Cracking', name: 'Password Cracking', group: 'Exploitation', color: nodeColors.Exploitation, shape: 'cube', size: 6 },
-                    { id: 'Privilege Escalation', name: 'Privilege Escalation', group: 'Exploitation', color: nodeColors.Exploitation, shape: 'cube', size: 7 },
-                    { id: 'Metasploit', name: 'Metasploit Framework', group: 'Tools', color: nodeColors.Tools, shape: 'cylinder', size: 5 },
-                    { id: 'Hashcat/John', name: 'Hashcat / JTR', group: 'Tools', color: nodeColors.Tools, shape: 'cylinder', size: 4 },
-                    { id: 'Web Hacking', name: 'Web Hacking', group: 'Web Hacking', color: nodeColors['Web Hacking'], shape: 'cone', size: 9 },
-                    { id: 'OWASP Top 10', name: 'OWASP Top 10', group: 'Web Hacking', color: nodeColors['Web Hacking'], shape: 'sphere', size: 7 },
-                    { id: 'SQL Injection', name: 'SQL Injection', group: 'Web Hacking', color: nodeColors['Web Hacking'], shape: 'sphere', size: 6 },
-                    { id: 'XSS', name: 'XSS', group: 'Web Hacking', color: nodeColors['Web Hacking'], shape: 'sphere', size: 6 },
-                    { id: 'CSRF', name: 'CSRF', group: 'Web Hacking', color: nodeColors['Web Hacking'], shape: 'sphere', size: 5 },
-                    { id: 'SSRF', name: 'SSRF', group: 'Web Hacking', color: nodeColors['Web Hacking'], shape: 'sphere', size: 5 },
-                    { id: 'LFI/RFI', name: 'File Inclusion', group: 'Web Hacking', color: nodeColors['Web Hacking'], shape: 'sphere', size: 5 },
-                    { id: 'API Security', name: 'API Security', group: 'Web Hacking', color: nodeColors['Web Hacking'], shape: 'sphere', size: 6 },
-                    { id: 'Burp Suite', name: 'Burp Suite / ZAP', group: 'Tools', color: nodeColors.Tools, shape: 'cylinder', size: 5 },
-                    { id: 'SQLMap', name: 'SQLMap', group: 'Tools', color: nodeColors.Tools, shape: 'cylinder', size: 4 },
-                    { id: 'Post-Exploitation', name: 'Post-Exploitation', group: 'Post-Exploitation', color: nodeColors['Post-Exploitation'], shape: 'cone', size: 9 },
-                    { id: 'Maintaining Access', name: 'Maintaining Access', group: 'Post-Exploitation', color: nodeColors['Post-Exploitation'], shape: 'sphere', size: 6 },
-                    { id: 'Lateral Movement', name: 'Lateral Movement', group: 'Post-Exploitation', color: nodeColors['Post-Exploitation'], shape: 'sphere', size: 6 },
-                    { id: 'Pivoting', name: 'Pivoting', group: 'Post-Exploitation', color: nodeColors['Post-Exploitation'], shape: 'sphere', size: 5 },
-                    { id: 'Data Exfil', name: 'Data Exfiltration', group: 'Post-Exploitation', color: nodeColors['Post-Exploitation'], shape: 'sphere', size: 5 },
-                    { id: 'Clearing Logs', name: 'Clearing Logs', group: 'Post-Exploitation', color: nodeColors['Post-Exploitation'], shape: 'sphere', size: 5 },
-                    { id: 'Defense Evasion', name: 'Defense Evasion', group: 'Defense Evasion', color: nodeColors['Defense Evasion'], shape: 'sphere', size: 8 },
-                    { id: 'AV Evasion', name: 'AV Evasion', group: 'Defense Evasion', color: nodeColors['Defense Evasion'], shape: 'cube', size: 6 },
-                    { id: 'Firewall/IDS Evasion', name: 'Firewall/IDS Evasion', group: 'Defense Evasion', color: nodeColors['Defense Evasion'], shape: 'cube', size: 6 },
-                    { id: 'Cryptography', name: 'Cryptography', group: 'Cryptography', color: nodeColors.Cryptography, shape: 'sphere', size: 8 },
-                    { id: 'Hashing Algos', name: 'Hashing Algorithms', group: 'Cryptography', color: nodeColors.Cryptography, shape: 'cube', size: 5 },
-                    { id: 'Encryption Algos', name: 'Encryption Algorithms', group: 'Cryptography', color: nodeColors.Cryptography, shape: 'cube', size: 5 },
-                    { id: 'Social Engineering', name: 'Social Engineering', group: 'Social Engineering', color: nodeColors['Social Engineering'], shape: 'sphere', size: 8 },
-                    { id: 'Phishing', name: 'Phishing', group: 'Social Engineering', color: nodeColors['Social Engineering'], shape: 'cone', size: 6 },
-                    { id: 'Exploit Development', name: 'Exploit Development', group: 'Exploitation', color: nodeColors.Exploitation, shape: 'dodecahedron', size: 7 },
-                    { id: 'Reverse Engineering', name: 'Reverse Engineering', group: 'Exploitation', color: nodeColors.Exploitation, shape: 'dodecahedron', size: 7 },
-                    { id: 'Ghidra/IDA', name: 'Ghidra / IDA Pro', group: 'Tools', color: nodeColors.Tools, shape: 'cylinder', size: 4 },
-                    { id: 'Malware Analysis', name: 'Malware Analysis', group: 'Exploitation', color: nodeColors.Exploitation, shape: 'dodecahedron', size: 7 },
-                    { id: 'AD Hacking', name: 'Active Directory Hacking', group: 'Exploitation', color: nodeColors.Exploitation, shape: 'dodecahedron', size: 7 },
-                    { id: 'Cloud Security', name: 'Cloud Security', group: 'Cloud Security', color: nodeColors['Cloud Security'], shape: 'dodecahedron', size: 8 },
-                    { id: 'Mobile Security', name: 'Mobile Security', group: 'Mobile Security', color: nodeColors['Mobile Security'], shape: 'dodecahedron', size: 8 },
-                    { id: 'Certifications', name: 'Certifications', group: 'Certifications', color: nodeColors.Certifications, shape: 'capsule', size: 10 },
-                    { id: 'CompTIA Sec+', name: 'CompTIA Security+', group: 'Certifications', color: nodeColors.Certifications, shape: 'capsule', size: 6 },
-                    { id: 'CEH', name: 'EC-Council CEH', group: 'Certifications', color: nodeColors.Certifications, shape: 'capsule', size: 6 },
-                    { id: 'OSCP', name: 'Offensive Security OSCP', group: 'Certifications', color: nodeColors.Certifications, shape: 'capsule', size: 7 },
-                    { id: 'CISSP', name: '(ISC)² CISSP', group: 'Certifications', color: nodeColors.Certifications, shape: 'capsule', size: 7 },
+                    { id: 'Fundamentals', name: 'Fundamentals', group: 'Fundamentals', color: nodeColors.Fundamentals, shape: 'capsule', size: 10, description: "The absolute basics, like learning your ABCs. Essential knowledge before diving deeper into ethical hacking." },
+                    { id: 'Networking', name: 'Networking (TCP/IP, DNS, HTTP)', group: 'Fundamentals', color: nodeColors.Fundamentals, shape: 'capsule', size: 7, description: "How computers talk to each other over the internet or a local network. Think of it as the internet's postal system with addresses (IP) and rules (TCP/IP)." },
+                    { id: 'Linux CLI', name: 'Linux CLI & Admin', group: 'Fundamentals', color: nodeColors.Fundamentals, shape: 'capsule', size: 7, description: "Using typed commands to control a Linux computer. Many hacking tools and servers run on Linux, so this is key!" },
+                    { id: 'Python Scripting', name: 'Python Scripting', group: 'Fundamentals', color: nodeColors.Fundamentals, shape: 'capsule', size: 7, description: "Writing small programs (scripts) in Python to automate tasks, create tools, or customize exploits. It's like teaching your computer to do repetitive jobs for you." },
+                    { id: 'Virtualization', name: 'Virtualization (VMware/VBox)', group: 'Fundamentals', color: nodeColors.Fundamentals, shape: 'capsule', size: 6, description: "Creating 'pretend' computers (Virtual Machines) inside your real computer. Great for safely practicing hacking or running different operating systems." },
+                    { id: 'Security Concepts', name: 'Basic Security Concepts', group: 'Fundamentals', color: nodeColors.Fundamentals, shape: 'capsule', size: 6, description: "The core ideas of cybersecurity: protecting information (Confidentiality, Integrity, Availability), understanding risks, and common attack methods." },
+                    { id: 'Wireshark', name: 'Wireshark', group: 'Tools', color: nodeColors.Tools, shape: 'cylinder', size: 4, description: "A 'network sniffer' tool. It's like a detective's tool to see all the digital conversations (data packets) happening on a network." },
+                    { id: 'Reconnaissance', name: 'Reconnaissance', group: 'Reconnaissance', color: nodeColors.Reconnaissance, shape: 'sphere', size: 9, description: "The 'information gathering' phase. Like a detective, you're finding out as much as possible about your target before an attack." },
+                    { id: 'OSINT', name: 'OSINT', group: 'Reconnaissance', color: nodeColors.Reconnaissance, shape: 'cube', size: 6, description: "Open Source Intelligence. Finding information from publicly available sources like websites, social media, and search engines." },
+                    { id: 'Google Dorking', name: 'Google Dorking', group: 'Reconnaissance', color: nodeColors.Reconnaissance, shape: 'cube', size: 5, description: "Using special Google search queries to find hidden information, sensitive files, or vulnerable systems that aren't easily found with normal searches." },
+                    { id: 'WHOIS', name: 'WHOIS Info', group: 'Reconnaissance', color: nodeColors.Reconnaissance, shape: 'cube', size: 5, description: "Looking up who owns a domain name (website address) or an IP address. It's like a public phonebook for internet resources." },
+                    { id: 'DNS Enum', name: 'DNS Enumeration', group: 'Reconnaissance', color: nodeColors.Reconnaissance, shape: 'cube', size: 6, description: "Finding all the 'nicknames' (like www, mail, ftp) and associated IP addresses for a target domain. Helps map out their internet presence." },
+                    { id: 'Subdomain Enum', name: 'Subdomain Enumeration', group: 'Reconnaissance', color: nodeColors.Reconnaissance, shape: 'cube', size: 6, description: "Discovering hidden or less-known parts of a website, like 'test.example.com' or 'admin.example.com', which might be less secure." },
+                    { id: 'Shodan', name: 'Shodan', group: 'Tools', color: nodeColors.Tools, shape: 'cylinder', size: 4, description: "A search engine for internet-connected devices. You can find webcams, servers, industrial controls, and more – sometimes with default passwords!" },
+                    { id: 'Scanning', name: 'Scanning & Enumeration', group: 'Scanning', color: nodeColors.Scanning, shape: 'cone', size: 9, description: "Actively 'knocking on doors' of target systems to see what services are running and what potential weaknesses exist." },
+                    { id: 'Network Scanning', name: 'Network Scanning', group: 'Scanning', color: nodeColors.Scanning, shape: 'sphere', size: 6, description: "Finding live computers and devices on a target network." },
+                    { id: 'Port Scanning', name: 'Port Scanning', group: 'Scanning', color: nodeColors.Scanning, shape: 'sphere', size: 6, description: "Checking which 'digital doors' (ports) are open on a computer. Each port usually corresponds to a specific service (like web or email)." },
+                    { id: 'Vuln Scanning', name: 'Vulnerability Scanning', group: 'Scanning', color: nodeColors.Scanning, shape: 'sphere', size: 6, description: "Using automated tools to check systems for known security weaknesses or flaws." },
+                    { id: 'Service Enum', name: 'Service Enumeration', group: 'Scanning', color: nodeColors.Scanning, shape: 'sphere', size: 5, description: "Identifying the exact software and version running on open ports. This helps find known exploits for that specific software." },
+                    { id: 'Nmap', name: 'Nmap', group: 'Tools', color: nodeColors.Tools, shape: 'cylinder', size: 5, description: "A powerful, versatile tool for network discovery, port scanning, and service enumeration. A hacker's Swiss Army knife!" },
+                    { id: 'Nessus/OpenVAS', name: 'Nessus / OpenVAS', group: 'Tools', color: nodeColors.Tools, shape: 'cylinder', size: 4, description: "Popular automated vulnerability scanners. They check systems against a large database of known vulnerabilities." },
+                    { id: 'Exploitation', name: 'Exploitation', group: 'Exploitation', color: nodeColors.Exploitation, shape: 'sphere', size: 10, description: "The 'break-in' phase. Taking advantage of a discovered vulnerability to gain unauthorized access or control." },
+                    { id: 'System Hacking', name: 'System Hacking', group: 'Exploitation', color: nodeColors.Exploitation, shape: 'cube', size: 7, description: "Gaining control over a target computer system, whether it's Windows, Linux, or another OS." },
+                    { id: 'Linux Exploits', name: 'Linux Exploits', group: 'Exploitation', color: nodeColors.Exploitation, shape: 'cube', size: 5, description: "Specific techniques or programs used to compromise Linux-based systems by leveraging their vulnerabilities." },
+                    { id: 'Windows Exploits', name: 'Windows Exploits', group: 'Exploitation', color: nodeColors.Exploitation, shape: 'cube', size: 5, description: "Specific techniques or programs used to compromise Windows-based systems by leveraging their vulnerabilities." },
+                    { id: 'Password Cracking', name: 'Password Cracking', group: 'Exploitation', color: nodeColors.Exploitation, shape: 'cube', size: 6, description: "Trying to guess or recover passwords, often from stolen password hashes (scrambled versions of passwords)." },
+                    { id: 'Privilege Escalation', name: 'Privilege Escalation', group: 'Exploitation', color: nodeColors.Exploitation, shape: 'cube', size: 7, description: "Starting with limited access on a system and finding a way to gain higher-level (e.g., administrator or root) privileges." },
+                    { id: 'Metasploit', name: 'Metasploit Framework', group: 'Tools', color: nodeColors.Tools, shape: 'cylinder', size: 5, description: "A popular framework packed with pre-built exploits, payloads, and tools, making it easier to launch attacks against known vulnerabilities." },
+                    { id: 'Hashcat/John', name: 'Hashcat / JTR', group: 'Tools', color: nodeColors.Tools, shape: 'cylinder', size: 4, description: "Powerful tools specifically designed for cracking password hashes using various methods like dictionary attacks or brute force." },
+                    { id: 'Web Hacking', name: 'Web Hacking', group: 'Web Hacking', color: nodeColors['Web Hacking'], shape: 'cone', size: 9, description: "Finding and exploiting vulnerabilities in websites and web applications, which are very common targets." },
+                    { id: 'OWASP Top 10', name: 'OWASP Top 10', group: 'Web Hacking', color: nodeColors['Web Hacking'], shape: 'sphere', size: 7, description: "A famous list of the 10 most critical security risks to web applications. A great starting point for learning web security." },
+                    { id: 'SQL Injection', name: 'SQL Injection', group: 'Web Hacking', color: nodeColors['Web Hacking'], shape: 'sphere', size: 6, description: "Tricking a website's database into running malicious database commands, potentially revealing or altering sensitive data." },
+                    { id: 'XSS', name: 'XSS', group: 'Web Hacking', color: nodeColors['Web Hacking'], shape: 'sphere', size: 6, description: "Cross-Site Scripting. Injecting malicious scripts into a website, which then run in the browsers of unsuspecting visitors." },
+                    { id: 'CSRF', name: 'CSRF', group: 'Web Hacking', color: nodeColors['Web Hacking'], shape: 'sphere', size: 5, description: "Cross-Site Request Forgery. Tricking a logged-in user into unknowingly sending commands to a web application they are authenticated to." },
+                    { id: 'SSRF', name: 'SSRF', group: 'Web Hacking', color: nodeColors['Web Hacking'], shape: 'sphere', size: 5, description: "Server-Side Request Forgery. Forcing the web server to make requests to other internal or external systems it wasn't supposed to." },
+                    { id: 'LFI/RFI', name: 'File Inclusion', group: 'Web Hacking', color: nodeColors['Web Hacking'], shape: 'sphere', size: 5, description: "Local/Remote File Inclusion. Tricking a web application into including and executing files from the server or even a remote location." },
+                    { id: 'API Security', name: 'API Security', group: 'Web Hacking', color: nodeColors['Web Hacking'], shape: 'sphere', size: 6, description: "Protecting Application Programming Interfaces (APIs), which are how different software components or services talk to each other." },
+                    { id: 'Burp Suite', name: 'Burp Suite / ZAP', group: 'Tools', color: nodeColors.Tools, shape: 'cylinder', size: 5, description: "Powerful web proxy tools. They sit between your browser and a website, letting you inspect, modify, and replay web traffic to find vulnerabilities." },
+                    { id: 'SQLMap', name: 'SQLMap', group: 'Tools', color: nodeColors.Tools, shape: 'cylinder', size: 4, description: "An automated tool specifically designed to detect and exploit SQL injection vulnerabilities in web applications." },
+                    { id: 'Post-Exploitation', name: 'Post-Exploitation', group: 'Post-Exploitation', color: nodeColors['Post-Exploitation'], shape: 'cone', size: 9, description: "What happens *after* successfully breaking into a system. Includes exploring, maintaining access, and achieving objectives." },
+                    { id: 'Maintaining Access', name: 'Maintaining Access', group: 'Post-Exploitation', color: nodeColors['Post-Exploitation'], shape: 'sphere', size: 6, description: "Setting up ways to get back into a compromised system later, like installing backdoors or creating hidden accounts." },
+                    { id: 'Lateral Movement', name: 'Lateral Movement', group: 'Post-Exploitation', color: nodeColors['Post-Exploitation'], shape: 'sphere', size: 6, description: "Moving from one compromised computer to other computers within the same network to find more valuable targets or data." },
+                    { id: 'Pivoting', name: 'Pivoting', group: 'Post-Exploitation', color: nodeColors['Post-Exploitation'], shape: 'sphere', size: 5, description: "Using a compromised machine as a 'stepping stone' to attack other systems that are not directly reachable from the outside." },
+                    { id: 'Data Exfil', name: 'Data Exfiltration', group: 'Post-Exploitation', color: nodeColors['Post-Exploitation'], shape: 'sphere', size: 5, description: "Stealing sensitive information from a compromised system and transferring it out of the target network." },
+                    { id: 'Clearing Logs', name: 'Clearing Logs', group: 'Post-Exploitation', color: nodeColors['Post-Exploitation'], shape: 'sphere', size: 5, description: "Attempting to erase digital footprints (logs) to hide the hacking activity and avoid detection." },
+                    { id: 'Defense Evasion', name: 'Defense Evasion', group: 'Defense Evasion', color: nodeColors['Defense Evasion'], shape: 'sphere', size: 8, description: "Techniques used to bypass security measures like antivirus, firewalls, and intrusion detection systems." },
+                    { id: 'AV Evasion', name: 'AV Evasion', group: 'Defense Evasion', color: nodeColors['Defense Evasion'], shape: 'cube', size: 6, description: "Modifying malware or attack techniques so that antivirus software doesn't recognize them as malicious." },
+                    { id: 'Firewall/IDS Evasion', name: 'Firewall/IDS Evasion', group: 'Defense Evasion', color: nodeColors['Defense Evasion'], shape: 'cube', size: 6, description: "Techniques to sneak malicious traffic past firewalls or avoid triggering alerts from Intrusion Detection/Prevention Systems." },
+                    { id: 'Cryptography', name: 'Cryptography', group: 'Cryptography', color: nodeColors.Cryptography, shape: 'sphere', size: 8, description: "The art of secret codes! Using math to protect information by making it unreadable (encryption) or verifying its authenticity (digital signatures)." },
+                    { id: 'Hashing Algos', name: 'Hashing Algorithms', group: 'Cryptography', color: nodeColors.Cryptography, shape: 'cube', size: 5, description: "One-way functions that create a unique 'fingerprint' (hash) for data. If the data changes even slightly, the hash changes completely. Used for password storage and integrity checks." },
+                    { id: 'Encryption Algos', name: 'Encryption Algorithms', group: 'Cryptography', color: nodeColors.Cryptography, shape: 'cube', size: 5, description: "Methods to scramble data (plaintext) into an unreadable format (ciphertext) using a secret key. Only those with the key can unscramble it." },
+                    { id: 'Social Engineering', name: 'Social Engineering', group: 'Social Engineering', color: nodeColors['Social Engineering'], shape: 'sphere', size: 8, description: "The art of manipulating people to gain information or access. It's about exploiting human psychology rather than technical flaws." },
+                    { id: 'Phishing', name: 'Phishing', group: 'Social Engineering', color: nodeColors['Social Engineering'], shape: 'cone', size: 6, description: "Sending deceptive emails, messages, or creating fake websites to trick people into revealing sensitive info (like passwords) or downloading malware." },
+                    { id: 'Exploit Development', name: 'Exploit Development', group: 'Exploitation', color: nodeColors.Exploitation, shape: 'dodecahedron', size: 7, description: "Creating new code or techniques to take advantage of a software vulnerability. This is highly technical and involves deep understanding of how software works (and breaks!)." },
+                    { id: 'Reverse Engineering', name: 'Reverse Engineering', group: 'Exploitation', color: nodeColors.Exploitation, shape: 'dodecahedron', size: 7, description: "Taking apart software or hardware (like a compiled program) to understand how it works internally, often to find vulnerabilities or hidden features." },
+                    { id: 'Ghidra/IDA', name: 'Ghidra / IDA Pro', group: 'Tools', color: nodeColors.Tools, shape: 'cylinder', size: 4, description: "Powerful disassembler and decompiler tools used for reverse engineering software. They help turn machine code back into something more human-readable." },
+                    { id: 'Malware Analysis', name: 'Malware Analysis', group: 'Exploitation', color: nodeColors.Exploitation, shape: 'dodecahedron', size: 7, description: "Studying malicious software (viruses, worms, ransomware) to understand its behavior, how it spreads, and what damage it does. Crucial for defense and incident response." },
+                    { id: 'AD Hacking', name: 'Active Directory Hacking', group: 'Exploitation', color: nodeColors.Exploitation, shape: 'dodecahedron', size: 7, description: "Targeting Active Directory, the central user and computer management system in many corporate Windows networks. A common high-value target." },
+                    { id: 'Cloud Security', name: 'Cloud Security', group: 'Cloud Security', color: nodeColors['Cloud Security'], shape: 'dodecahedron', size: 8, description: "Protecting data, applications, and infrastructure hosted on cloud platforms like AWS, Azure, or Google Cloud. Involves new types of risks and controls." },
+                    { id: 'Mobile Security', name: 'Mobile Security', group: 'Mobile Security', color: nodeColors['Mobile Security'], shape: 'dodecahedron', size: 8, description: "Securing smartphones, tablets, and the applications that run on them. Includes mobile OS vulnerabilities, app weaknesses, and network threats specific to mobile devices." },
+                    { id: 'Certifications', name: 'Certifications', group: 'Certifications', color: nodeColors.Certifications, shape: 'capsule', size: 10, description: "Official credentials that validate your knowledge and skills in specific cybersecurity areas. They can help boost your career but hands-on experience is king!" },
+                    { id: 'CompTIA Sec+', name: 'CompTIA Security+', group: 'Certifications', color: nodeColors.Certifications, shape: 'capsule', size: 6, description: "A foundational, vendor-neutral certification covering core cybersecurity concepts, threats, and best practices. Great for beginners." },
+                    { id: 'CEH', name: 'EC-Council CEH', group: 'Certifications', color: nodeColors.Certifications, shape: 'capsule', size: 6, description: "Certified Ethical Hacker. A well-known certification that focuses on common hacking tools and techniques from an ethical perspective." },
+                    { id: 'OSCP', name: 'Offensive Security OSCP', group: 'Certifications', color: nodeColors.Certifications, shape: 'capsule', size: 7, description: "A highly respected, hands-on certification that requires you to compromise multiple machines in a 24-hour practical exam. Proves real-world hacking skills." },
+                    { id: 'CISSP', name: '(ISC)² CISSP', group: 'Certifications', color: nodeColors.Certifications, shape: 'capsule', size: 7, description: "A globally recognized, high-level certification for experienced security professionals, covering a broad range of security domains and management." }
                 ],
                 links: [ /* Same links as previous version */
                     { source: 'Fundamentals', target: 'Networking' }, { source: 'Fundamentals', target: 'Linux CLI' },
@@ -460,28 +503,23 @@
 
 
             function createTextLabel(text, nodeColor) {
-                const fontSize = 20; const padding = 10; // Smaller labels
+                const fontSize = 20; const padding = 10; 
                 const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d');
-                ctx.font = `600 ${fontSize}px Poppins, Arial, sans-serif`; // Slightly bolder
+                ctx.font = `600 ${fontSize}px Poppins, Arial, sans-serif`; 
                 
                 const textMetrics = ctx.measureText(text);
                 const textWidth = textMetrics.width;
                 const width = textWidth + padding * 2; 
-                const height = fontSize + padding * 1.5; // Adjusted height for better padding
+                const height = fontSize + padding * 1.5; 
                 
-                canvas.width = width * 2; canvas.height = height * 2; // Higher res for crispness
+                canvas.width = width * 2; canvas.height = height * 2; 
                 ctx.scale(2, 2);
 
-                // Label background - This remains the same, providing a contrasting backdrop
                 ctx.fillStyle = darkModeToggle.checked ? 'rgba(50, 55, 60, 0.7)' : 'rgba(250, 250, 255, 0.7)';
                 ctx.roundRect(0, 0, width, height, 8);
                 ctx.fill();
 
-                // Label text color - Enhanced for visibility
-                // OLD: ctx.fillStyle = '#000000'; 
-                ctx.fillStyle = darkModeToggle.checked ? '#F0F0F0' : '#222222'; // <--- THIS IS THE UPDATED LINE
-                                                                           // #F0F0F0 is a very light grey (almost white)
-                                                                           // #222222 is a very dark grey (almost black)
+                ctx.fillStyle = darkModeToggle.checked ? '#F0F0F0' : '#222222';
                 
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
@@ -493,8 +531,8 @@
 
                 const material = new THREE.SpriteMaterial({ map: texture, depthTest:false, transparent: true, opacity: DEFAULT_LABEL_OPACITY });
                 const sprite = new THREE.Sprite(material);
-                sprite.name = 'labelSprite'; // For easier lookup
-                sprite.scale.set(width / 10, height / 10, 1); // Adjusted scale
+                sprite.name = 'labelSprite'; 
+                sprite.scale.set(width / 10, height / 10, 1); 
                 return sprite;
             }
             function createNodeShape(node) {
@@ -505,7 +543,7 @@
                     case 'cylinder': geometry = new THREE.CylinderGeometry(size*0.7, size*0.7, size*1.5, 16); break;
                     case 'capsule': geometry = new THREE.CapsuleGeometry(size*0.6, size*1.2, 8, 16); break;
                     case 'dodecahedron': geometry = new THREE.DodecahedronGeometry(size*0.8, 0); break;
-                    default: geometry = new THREE.SphereGeometry(size, 24, 12); break; // Reduced segments slightly
+                    default: geometry = new THREE.SphereGeometry(size, 24, 12); break; 
                 }
                 const material = new THREE.MeshPhongMaterial({ 
                     color: node.color || '#cccccc', 
@@ -514,7 +552,6 @@
                     opacity: DEFAULT_NODE_OPACITY 
                 });
                 const mesh = new THREE.Mesh(geometry, material);
-                // Store default color for reset
                 mesh.userData.defaultColor = new THREE.Color(node.color || '#cccccc'); 
                 return mesh;
             }
@@ -523,33 +560,32 @@
                 (graphContainer)
                 .graphData(data)
                 .nodeId('id')
-                // .nodeLabel('name') // We use custom labels, so this is less critical
                 .nodeThreeObject(node => {
                     const obj = createNodeShape(node);
                     const label = createTextLabel(node.name || node.id, node.color);
                     const labelOffset = (node.shape === 'cone' ? (node.size * 0.9) : (node.size * 0.6)) + 3;
                     label.position.set(0, labelOffset, 0);
                     obj.add(label);
-                    node.__threeObj = obj; // Keep reference for updates
+                    node.__threeObj = obj; 
                     return obj;
                 })
                 .linkWidth(0.7)
                 .linkColor(link => highlightedLinksSet.has(link.id) ? (darkModeToggle.checked ? '#ffa500' : '#ff8c00') : (darkModeToggle.checked ? 'rgba(180,180,180,0.1)' : 'rgba(100,100,100,0.15)'))
                 .linkMaterial(link => {
                     const opacity = highlightedLinksSet.has(link.id) ? SELECTED_LINK_OPACITY : DIMMED_LINK_OPACITY;
-                     return new THREE.MeshBasicMaterial({ // Simpler material for links
-                        color: highlightedLinksSet.has(link.id) ? (darkModeToggle.checked ? '#ffa500' : '#ff8c00') : (darkModeToggle.checked ? 0xaaaaaa : 0x666666),
+                     return new THREE.MeshBasicMaterial({ 
+                        color: highlightedLinksSet.has(link.id) ? (darkModeToggle.checked ? 0xffa500 : 0xff8c00) : (darkModeToggle.checked ? 0xaaaaaa : 0x666666),
                         transparent: true,
-                        opacity: currentSelectedNodeData ? opacity : DEFAULT_LINK_OPACITY // Use default if no selection
+                        opacity: currentSelectedNodeData ? opacity : DEFAULT_LINK_OPACITY 
                     });
                 })
                 .linkDirectionalParticles(1)
                 .linkDirectionalParticleWidth(link => highlightedLinksSet.has(link.id) ? 1.2 : 0.5)
                 .linkDirectionalParticleColor(link => highlightedLinksSet.has(link.id) ? (darkModeToggle.checked ? '#FFD700' : '#FFA500') : (darkModeToggle.checked ? '#666666' : '#AAAAAA'))
                 .backgroundColor(darkModeToggle.checked ? getCssVar('--bg-dark') : getCssVar('--bg-light'))
-                .enableNodeDrag(false) // Nodes are not draggable
-                .cooldownTicks(250) // Let it settle
-                .onEngineStop(() => { // Fix nodes after layout
+                .enableNodeDrag(false) 
+                .cooldownTicks(250) 
+                .onEngineStop(() => { 
                     Graph.graphData().nodes.forEach(node => {
                         node.fx = node.x;
                         node.fy = node.y;
@@ -558,7 +594,38 @@
                     console.log("Engine stopped, nodes fixed.");
                 })
                 .onNodeClick(handleNodeClick)
-                .onBackgroundClick(resetSelectionAndCamera);
+                .onBackgroundClick(resetSelectionAndCamera)
+                .onNodeHover(node => {
+                    if (tooltipElement) {
+                        if (node && node.description) {
+                            tooltipElement.innerHTML = `<strong>${node.name}</strong>${node.description}`;
+                            
+                            // Position tooltip near mouse, with boundary checks
+                            let left = mouseX + 15;
+                            let top = mouseY + 15;
+                            
+                            tooltipElement.style.display = 'block'; // Display first to get dimensions
+                            const DtooltipRect = tooltipElement.getBoundingClientRect();
+
+                            if (mouseX + 15 + DtooltipRect.width > window.innerWidth) {
+                                left = mouseX - 15 - DtooltipRect.width;
+                            }
+                            if (mouseY + 15 + DtooltipRect.height > window.innerHeight) {
+                                top = mouseY - 15 - DtooltipRect.height;
+                            }
+                             // Ensure tooltip doesn't go off top/left
+                            if (left < 0) left = 5;
+                            if (top < 0) top = 5;
+
+                            tooltipElement.style.left = `${left}px`;
+                            tooltipElement.style.top = `${top}px`;
+                            
+                        } else {
+                            tooltipElement.style.display = 'none';
+                        }
+                    }
+                });
+
 
             Graph.scene().add(new THREE.AmbientLight(darkModeToggle.checked ? 0x666666 : 0xaaaaaa, 0.8));
             const directionalLight = new THREE.DirectionalLight(0xffffff, 0.7);
@@ -570,14 +637,14 @@
             darkModeToggle.addEventListener('change', () => {
                  Graph.backgroundColor(darkModeToggle.checked ? getCssVar('--bg-dark') : getCssVar('--bg-light'));
                  Graph.scene().children.find(c => c instanceof THREE.AmbientLight).color.setHex(darkModeToggle.checked ? 0x666666 : 0xaaaaaa);
-                 // Re-trigger visual update to apply new label/link colors if needed, or refresh materials
-                 updateNodeVisuals();
+                 updateNodeVisuals(); // This will re-apply label colors indirectly by recreating texture if needed, or just force update links
             });
         }
 
         function handleNodeClick(node) {
+            if (tooltipElement) tooltipElement.style.display = 'none'; // Hide tooltip on click
+
             if (currentSelectedNodeData && currentSelectedNodeData.id === node.id) {
-                // Clicked the same node again, reset
                 resetSelectionAndCamera();
             } else {
                 currentSelectedNodeData = node;
@@ -585,7 +652,6 @@
                 highlightedLinksSet.clear();
 
                 highlightedNodesSet.add(node.id);
-                // Find direct children (nodes it links TO)
                 Graph.graphData().links.forEach(link => {
                     if (link.source.id === node.id) {
                         highlightedNodesSet.add(link.target.id);
@@ -602,7 +668,7 @@
             highlightedNodesSet.clear();
             highlightedLinksSet.clear();
             updateNodeVisuals();
-            Graph.cameraPosition({ x: 0, y: 0, z: 300 }, { x: 0, y: 0, z: 0 }, 1200); // Overview
+            Graph.cameraPosition({ x: 0, y: 0, z: 300 }, { x: 0, y: 0, z: 0 }, 1200); 
         }
 
         function updateNodeVisuals() {
@@ -612,7 +678,7 @@
                 const material = obj.material;
                 const labelSprite = obj.children.find(child => child.name === 'labelSprite');
 
-                if (currentSelectedNodeData) { // A node is selected
+                if (currentSelectedNodeData) { 
                     if (highlightedNodesSet.has(n.id)) {
                         material.opacity = SELECTED_NODE_OPACITY;
                         if(labelSprite) labelSprite.material.opacity = SELECTED_LABEL_OPACITY;
@@ -620,12 +686,11 @@
                         material.opacity = DIMMED_NODE_OPACITY;
                         if(labelSprite) labelSprite.material.opacity = DIMMED_LABEL_OPACITY;
                     }
-                } else { // No node selected, reset to defaults
+                } else { 
                     material.opacity = DEFAULT_NODE_OPACITY;
                     if(labelSprite) labelSprite.material.opacity = DEFAULT_LABEL_OPACITY;
                 }
             });
-            // Force graph to re-evaluate link materials/colors
             Graph.linkMaterial(Graph.linkMaterial()) 
                  .linkColor(Graph.linkColor())
                  .linkDirectionalParticleColor(Graph.linkDirectionalParticleColor())
@@ -634,16 +699,15 @@
         
         function focusCameraOnNode(node) {
             if (node && node.__threeObj) {
-                const distRatio = 1 + Math.min(30, highlightedNodesSet.size * 2) / 100; // Adjust zoom based on subnode count
+                const distRatio = 1 + Math.min(30, highlightedNodesSet.size * 2) / 100; 
                 const distance = (node.size || 5) * 8 * distRatio + 60;
                 const nodePosition = node.__threeObj.position;
                 
                 const cameraTarget = new THREE.Vector3(nodePosition.x, nodePosition.y, nodePosition.z);
-                // Position camera slightly above and in front
                 const cameraPosition = new THREE.Vector3(
                     nodePosition.x, 
-                    nodePosition.y + distance * 0.2, // Slightly above
-                    nodePosition.z + distance         // In front
+                    nodePosition.y + distance * 0.2, 
+                    nodePosition.z + distance         
                 );
 
                 Graph.cameraPosition(cameraPosition, cameraTarget, 1200);
