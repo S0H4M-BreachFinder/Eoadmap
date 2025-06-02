@@ -80,12 +80,20 @@
         .accordion-header strong { font-size: 1.1em; color: var(--text-primary-current); }
         .accordion-icon { font-size: 1em; color: var(--accent-primary-current); transition: transform var(--transition-speed); }
         .accordion-item.active .accordion-icon { transform: rotate(45deg); }
-        .accordion-content { max-height: 0; overflow: hidden; padding: 0 20px; background-color: transparent; transition: max-height 0.5s ease-out, padding var(--transition-speed); }
-        .accordion-item.active .accordion-content { max-height: 1500px; padding: 20px; }
-        .accordion-content ul { list-style-position: inside; padding-left: 5px; }
+        .accordion-content { max-height: 219px; overflow: hidden; padding: 0 20px; background-color: transparent; transition: max-height 0.5s ease-out, padding var(--transition-speed); }
         .accordion-content ul li { margin-bottom: 8px; }
-        .loading-message { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 1.2em; color: var(--text-secondary-current); text-align: center; padding: 20px; }
-        
+        .loading-message { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 1.2em; color: var(--text-secondary-current); text-align: center; padding: 10px; }
+        .accordion-content { 
+            max-height: 0px; /* Start closed */ 
+            overflow: hidden; 
+            transition: max-height 0.6s ease-out, padding var(--transition-speed); 
+            margin: 0px 0; /* Increased margin */
+        }
+        .accordion-item.active .accordion-content { 
+            max-height: 500px; /* Arbitrary large value to allow expansion */ 
+            padding: 5px 20px; 
+            margin: 15px 2px; /* Increased margin for active state */
+        }
         #graph-tooltip {
             display: none;
             position: absolute;
